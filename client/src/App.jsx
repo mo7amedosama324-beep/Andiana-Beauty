@@ -156,7 +156,7 @@ const apiBase = "https://osama324.pythonanywhere.com/api";
   }
 
   const fetchProfile = async () => {
-    const response = await fetch(`${apiBase}/auth/me/`, { credentials: 'include' })
+    const response = await fetch(`${apiBase}/me/`, { credentials: 'include' })
     if (!response.ok) throw new Error('Unauthorized')
     return response.json()
   }
@@ -175,7 +175,7 @@ const apiBase = "https://osama324.pythonanywhere.com/api";
     setAuthError('')
     setAuthLoading(true)
     try {
-      const response = await fetch(`${apiBase}/auth/token/cookie/`, {
+      const response = await fetch(`${apiBase}/token/cookie/`, { // شلنا كلمة auth, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -195,7 +195,7 @@ const apiBase = "https://osama324.pythonanywhere.com/api";
   }
 
   const handleLogout = () => {
-    fetch(`${apiBase}/auth/logout/`, { method: 'POST', credentials: 'include' })
+    fetch(`${apiBase}/logout/`, { method: 'POST', credentials: 'include' })
     setAuthUser(null)
   }
 
