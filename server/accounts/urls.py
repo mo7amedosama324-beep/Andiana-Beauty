@@ -2,6 +2,8 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .views import (
+    AdminUserListView,
+    AdminUserUpdateView,
     CookieTokenObtainPairView,
     CookieTokenRefreshView,
     LogoutView,
@@ -21,4 +23,10 @@ urlpatterns = [
     ),
     path("auth/logout/", LogoutView.as_view(), name="logout"),
     path("auth/me/", ProfileView.as_view(), name="profile"),
+    path("admin/users/", AdminUserListView.as_view(), name="admin_users"),
+    path(
+        "admin/users/<int:pk>/",
+        AdminUserUpdateView.as_view(),
+        name="admin_user_update",
+    ),
 ]

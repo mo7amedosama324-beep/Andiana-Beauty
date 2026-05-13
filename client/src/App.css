@@ -1,84 +1,56 @@
-@keyframes floatSoft {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
+/* About page: scroll-triggered reveal (fonts load from index.html) */
+.about-reveal-block .about-col {
+  opacity: 0;
+  transform: translate3d(0, 1.65rem, 0);
+  transition:
+    opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.68s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
+.about-reveal-block--in .about-col:nth-child(1) {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition-delay: 0.06s;
+}
+
+.about-reveal-block--in .about-col:nth-child(2) {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition-delay: 0.2s;
+}
+
+.about-reveal-block.about-reveal-hero {
+  opacity: 0;
+  transform: translate3d(0, 1.25rem, 0);
+  transition:
+    opacity 0.55s ease,
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.about-reveal-block.about-reveal-hero.about-reveal-block--in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.about-reveal-img {
+  transform: scale(1.06);
+  transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.1s;
+}
+
+.about-reveal-block--in .about-reveal-img {
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-reveal-block .about-col,
+  .about-reveal-block.about-reveal-hero {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
+    transition: none;
   }
-}
 
-@keyframes spinSlow {
-  from {
-    transform: rotate(0deg);
+  .about-reveal-img {
+    transform: none;
+    transition: none;
   }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.glass-surface {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(16px);
-}
-
-.float-soft {
-  animation: floatSoft 6s ease-in-out infinite;
-}
-
-.fade-up {
-  animation: fadeUp 0.6s ease both;
-}
-
-.spinner {
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-top-color: #fff;
-  animation: spinSlow 0.8s linear infinite;
-}
-/* App.css */
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:wght@600&family=Tajawal:wght@400;700&display=swap');
-
-.glass-surface {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-}
-
-.fade-up {
-    animation: fadeUp 0.6s ease-out forwards;
-}
-
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid #ffffff;
-    border-bottom-color: transparent;
-    border-radius: 50%;
-    display: inline-block;
-    animation: rotation 1s linear infinite;
-}
-
-@keyframes rotation {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
 }

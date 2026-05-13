@@ -1,10 +1,14 @@
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .serializers import RegisterSerializer, UserSerializer
+from .serializers import AdminUserSerializer, RegisterSerializer, UserSerializer
+
+User = get_user_model()
 
 
 class RegisterView(generics.CreateAPIView):
@@ -20,6 +24,23 @@ class ProfileView(generics.RetrieveAPIView):
         return self.request.user
 
 
+def _jwt_auth_cookie_kwargs():
+    return {
+        "httponly": True,
+        "secure": getattr(settings, "JWT_AUTH_COOKIE_SECURE", False),
+        "samesite": getattr(settings, "JWT_AUTH_COOKIE_SAMESITE", "Lax"),
+        "path": "/",
+    }
+
+
+def _jwt_cookie_delete_kwargs():
+    return {
+        "path": "/",
+        "samesite": getattr(settings, "JWT_AUTH_COOKIE_SAMESITE", "Lax"),
+        "secure": getattr(settings, "JWT_AUTH_COOKIE_SECURE", False),
+    }
+
+
 class CookieTokenObtainPairView(TokenObtainPairView):
     permission_classes = [permissions.AllowAny]
 
@@ -30,18 +51,9 @@ class CookieTokenObtainPairView(TokenObtainPairView):
 
         access = response.data.get("access")
         refresh = response.data.get("refresh")
-        response.set_cookie(
-            "access_token",
-            access,
-            httponly=True,
-            samesite="Lax",
-        )
-        response.set_cookie(
-            "refresh_token",
-            refresh,
-            httponly=True,
-            samesite="Lax",
-        )
+        ck = _jwt_auth_cookie_kwargs()
+        response.set_cookie("access_token", access, **ck)
+        response.set_cookie("refresh_token", refresh, **ck)
         return response
 
 
@@ -54,7 +66,12 @@ class CookieTokenRefreshView(TokenRefreshView):
             data = request.data.copy()
             data["refresh"] = refresh
             request._full_data = data
-        return super().post(request, *args, **kwargs)
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == status.HTTP_200_OK:
+            access = response.data.get("access")
+            if access:
+                response.set_cookie("access_token", access, **_jwt_auth_cookie_kwargs())
+        return response
 
 
 class LogoutView(generics.GenericAPIView):
@@ -69,6 +86,20 @@ class LogoutView(generics.GenericAPIView):
             except TokenError:
                 pass
         response = Response(status=status.HTTP_204_NO_CONTENT)
-        response.delete_cookie("access_token")
-        response.delete_cookie("refresh_token")
+        dk = _jwt_cookie_delete_kwargs()
+        response.delete_cookie("access_token", path=dk["path"], samesite=dk["samesite"], secure=dk["secure"])
+        response.delete_cookie("refresh_token", path=dk["path"], samesite=dk["samesite"], secure=dk["secure"])
         return response
+
+
+class AdminUserListView(generics.ListAPIView):
+    serializer_class = AdminUserSerializer
+    permission_classes = [permissions.IsAdminUser]
+    queryset = User.objects.all().order_by("username")
+
+
+class AdminUserUpdateView(generics.UpdateAPIView):
+    serializer_class = AdminUserSerializer
+    permission_classes = [permissions.IsAdminUser]
+    queryset = User.objects.all()
+    http_method_names = ["patch"]
