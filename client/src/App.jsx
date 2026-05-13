@@ -43,7 +43,7 @@ export default function App() {
   const [categoriesError, setCategoriesError] = useState('')
   const [cart, setCart] = useState(null)
   const [cartBusy, setCartBusy] = useState(false)
-const apiBase = "https://osama324.pythonanywhere.com/api";
+const apiBase = 'https://osama324.pythonanywhere.com/api';
 
   const refreshCart = useCallback(async () => {
     const id = localStorage.getItem(CART_STORAGE_KEY)
