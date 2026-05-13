@@ -43,10 +43,7 @@ export default function App() {
   const [categoriesError, setCategoriesError] = useState('')
   const [cart, setCart] = useState(null)
   const [cartBusy, setCartBusy] = useState(false)
-  const apiBase = (
-    (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/$/, '') : 'http://localhost:8000') +
-    '/api'
-  ).replace(/\/$/, '')
+const apiBase = "https://osama324.pythonanywhere.com";
 
   const refreshCart = useCallback(async () => {
     const id = localStorage.getItem(CART_STORAGE_KEY)
