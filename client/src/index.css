@@ -88,3 +88,11 @@ html.palette-nude .palette-overlay {
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
+
+.palette-button {
+  min-width: 64px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
