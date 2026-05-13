@@ -55,3 +55,36 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* Nude palette overlay - tints the entire site subtly */
+.palette-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  opacity: 0;
+  transition: opacity 220ms ease-in-out;
+  z-index: 9999;
+  background: linear-gradient(90deg,
+    #3A2D28 0% 16%,
+    #A48374 16% 33%,
+    #CBAD8D 33% 50%,
+    #D1C7BD 50% 66%,
+    #EBE3DB 66% 83%,
+    #F1EDE6 83% 100%
+  );
+  background-size: cover;
+}
+
+html.palette-nude .palette-overlay {
+  opacity: 0.06;
+}
+
+/* small helper for a visible demo palette switcher when active */
+.palette-indicator {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}

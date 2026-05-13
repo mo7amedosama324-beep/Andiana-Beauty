@@ -31,6 +31,7 @@ function resolveImage(src, apiOrigin) {
 
 export default function App() {
   const [lang, setLang] = useState('en')
+  const [nudePalette, setNudePalette] = useState(false)
   const isAr = lang === 'ar'
   const [authUser, setAuthUser] = useState(null)
   const [authError, setAuthError] = useState('')
@@ -266,6 +267,30 @@ const apiBase = "https://osama324.pythonanywhere.com/api";
     refreshCart()
   }, [refreshCart])
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('palette_nude')
+      if (stored) setNudePalette(stored === '1')
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    try {
+      if (nudePalette) {
+        document.documentElement.classList.add('palette-nude')
+      } else {
+        document.documentElement.classList.remove('palette-nude')
+      }
+      localStorage.setItem('palette_nude', nudePalette ? '1' : '0')
+    } catch {}
+  }, [nudePalette])
+
+  useEffect(() => {
+    const handler = () => setNudePalette((s) => !s)
+    window.addEventListener('togglePalette', handler)
+    return () => window.removeEventListener('togglePalette', handler)
+  }, [])
+
   const cartItemCount =
     cart?.items?.reduce((acc, line) => acc + (line.quantity || 0), 0) ?? 0
 
@@ -327,7 +352,9 @@ const apiBase = "https://osama324.pythonanywhere.com/api";
   const t = content[lang]
 
   return (
-    <Routes>
+    <>
+      <div className="palette-overlay" aria-hidden />
+      <Routes>
       <Route
         path="/"
         element={
@@ -436,7 +463,7 @@ const apiBase = "https://osama324.pythonanywhere.com/api";
   )
 }
 
-function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartCount = 0 }) {
+function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartCount = 0, nudePalette, onTogglePalette }) {
   return (
     <header className="glass-surface sticky top-4 z-20 flex flex-wrap items-center gap-4 rounded-2xl border border-brand-500/10 px-5 py-3 shadow-soft">
       <div className="flex items-center gap-4">
@@ -494,6 +521,22 @@ function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartCount = 0 }) {
           onClick={() => setLang(isAr ? 'en' : 'ar')}
         >
           {isAr ? 'English' : 'العربية'}
+        </button>
+        <button
+          title="Apply Nude palette"
+          className={`ml-2 rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+            document.documentElement.classList.contains('palette-nude')
+              ? 'bg-stone-900 text-white'
+              : 'bg-white text-stone-700'
+          }`}
+          type="button"
+          onClick={(e) => {
+            e.preventDefault()
+            const ev = new CustomEvent('togglePalette')
+            window.dispatchEvent(ev)
+          }}
+        >
+          Palette
         </button>
         {authUser ? (
           <div className="flex items-center gap-2 rounded-full border border-brand-500/10 bg-white px-3 py-2 text-xs shadow-sm">
@@ -608,6 +651,8 @@ function Home({
           authUser={authUser}
           onLogout={onLogout}
           cartCount={cartItemCount}
+          nudePalette={nudePalette}
+          onTogglePalette={() => setNudePalette((s) => !s)}
         />
 
         <section className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
@@ -778,6 +823,8 @@ function ShopPage({
           authUser={authUser}
           onLogout={onLogout}
           cartCount={cartItemCount}
+          nudePalette={nudePalette}
+          onTogglePalette={() => setNudePalette((s) => !s)}
         />
 
         <section className="space-y-4">
@@ -950,6 +997,8 @@ function AboutPage({ isAr, setLang, t, authUser, onLogout, cartItemCount }) {
           authUser={authUser}
           onLogout={onLogout}
           cartCount={cartItemCount}
+          nudePalette={nudePalette}
+          onTogglePalette={() => setNudePalette((s) => !s)}
         />
 
         <div className="mt-10 space-y-16 md:space-y-24">
