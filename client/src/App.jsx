@@ -512,104 +512,180 @@ export default function App() {
   )
 }
 function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartCount = 0, nudePalette, onTogglePalette }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const navLinks = (
+    <>
+      <Link className="block transition hover:text-stone-900 py-2" to="/" onClick={() => setMobileMenuOpen(false)}>
+        {t.nav.home}
+      </Link>
+      <Link className="block transition hover:text-stone-900 py-2" to="/shop" onClick={() => setMobileMenuOpen(false)}>
+        {t.nav.shop}
+      </Link>
+      <Link className="block transition hover:text-stone-900 py-2" to="/about" onClick={() => setMobileMenuOpen(false)}>
+        {t.nav.about}
+      </Link>
+      {authUser?.is_staff ? (
+        <Link className="block transition hover:text-stone-900 py-2" to="/admin-dashboard" onClick={() => setMobileMenuOpen(false)}>
+          {t.nav.admin}
+        </Link>
+      ) : null}
+    </>
+  )
+
   return (
-    <header className="glass-surface sticky top-4 z-20 flex flex-wrap items-center gap-4 rounded-2xl border border-brand-500/10 px-5 py-3 shadow-soft">
-      <div className="flex items-center gap-4">
-        <img
-          className="h-14 w-14 rounded-xl object-contain shadow-sm"
-          src="/imgs/image.png"
-          alt="Andiana Beauty"
-        />
-        <div className="hidden sm:block">
-          <p className="font-display text-lg text-stone-900">Andiana</p>
-          <p className="text-xs uppercase tracking-[0.3em] text-stone-400">Beauty</p>
+    <>
+      <header className="glass-surface sticky top-4 z-20 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-500/10 px-5 py-3 shadow-soft">
+        <div className="flex items-center gap-4">
+          <img
+            className="h-14 w-14 rounded-xl object-contain shadow-sm"
+            src="/imgs/image.png"
+            alt="Andiana Beauty"
+          />
+          <div className="hidden sm:block">
+            <p className="font-display text-lg text-stone-900">Andiana</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-stone-400">Beauty</p>
+          </div>
         </div>
-      </div>
 
-      <nav className="hidden flex-1 items-center justify-center gap-6 text-sm font-medium text-stone-600 md:flex">
-        <Link className="transition hover:text-stone-900" to="/">
-          {t.nav.home}
-        </Link>
-        <Link className="transition hover:text-stone-900" to="/shop">
-          {t.nav.shop}
-        </Link>
-        <Link className="transition hover:text-stone-900" to="/about">
-          {t.nav.about}
-        </Link>
-        <Link className="relative transition hover:text-stone-900" to="/cart">
-          {t.nav.cart}
-          {cartCount > 0 ? (
-            <span className="absolute -top-2 min-w-[1.1rem] rounded-full bg-stone-900 px-1 text-center text-[10px] font-bold text-white ltr:-right-2 rtl:-left-2">
-              {cartCount > 99 ? '99+' : cartCount}
-            </span>
-          ) : null}
-        </Link>
-        {authUser?.is_staff ? (
-          <Link className="transition hover:text-stone-900" to="/admin-dashboard">
-            {t.nav.admin}
+        {/* Desktop Nav */}
+        <nav className="hidden flex-1 items-center justify-center gap-6 text-sm font-medium text-stone-600 md:flex">
+          {navLinks}
+        </nav>
+
+        {/* Desktop Right Controls */}
+        <div className="hidden md:flex flex-1 items-center justify-end gap-3">
+          <Link
+            className="relative rounded-full border border-brand-500/20 bg-white px-4 py-2 text-xs font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
+            to="/cart"
+          >
+            {t.nav.cart}
+            {cartCount > 0 ? (
+              <span className="absolute -top-2 min-w-[1.1rem] rounded-full bg-stone-900 px-1 text-center text-[10px] font-bold text-white ltr:-right-2 rtl:-left-2">
+                {cartCount > 99 ? '99+' : cartCount}
+              </span>
+            ) : null}
           </Link>
-        ) : null}
-      </nav>
+          <button
+            className="rounded-full border border-brand-500/20 bg-white px-4 py-2 text-xs font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
+            type="button"
+            onClick={() => setLang(isAr ? 'en' : 'ar')}
+          >
+            {isAr ? 'English' : 'العربية'}
+          </button>
+          <button
+            title="Apply Nude palette"
+            aria-label="Toggle nude palette"
+            className={`rounded-full border px-3 py-1 text-[10px] font-semibold transition palette-button ${
+              document.documentElement.classList.contains('palette-nude')
+                ? 'bg-stone-900 text-white'
+                : 'bg-white text-stone-700'
+            }`}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              const ev = new CustomEvent('togglePalette')
+              window.dispatchEvent(ev)
+            }}
+          >
+            🎨
+          </button>
+          {authUser ? (
+            <div className="flex items-center gap-2 rounded-full border border-brand-500/10 bg-white px-3 py-2 text-xs shadow-sm">
+              <span className="text-stone-600">
+                {t.auth.welcome}, {authUser.username}
+              </span>
+              <button
+                className="rounded-full border border-brand-500/20 px-3 py-1 text-[11px] font-semibold text-stone-700 transition hover:-translate-y-0.5 hover:shadow-glow"
+                type="button"
+                onClick={onLogout}
+              >
+                {t.auth.logout}
+              </button>
+            </div>
+          ) : (
+            <Link
+              className="rounded-full border border-brand-500/20 bg-white px-4 py-2 text-xs font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
+              to="/login"
+            >
+              {t.auth.signIn}
+            </Link>
+          )}
+        </div>
 
-      <div className="flex flex-1 items-center justify-end gap-3 md:flex-none">
-        <Link
-          className="relative rounded-full border border-brand-500/20 bg-white px-4 py-2 text-xs font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow md:hidden"
-          to="/cart"
-        >
-          {t.nav.cart}
-          {cartCount > 0 ? (
-            <span className="absolute -top-1 min-w-[1.1rem] rounded-full bg-stone-900 px-1 text-center text-[10px] font-bold text-white ltr:-right-1 rtl:-left-1">
-              {cartCount > 99 ? '99+' : cartCount}
-            </span>
-          ) : null}
-        </Link>
-        <button
-          className="rounded-full border border-brand-500/20 bg-white px-4 py-2 text-xs font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
-          type="button"
-          onClick={() => setLang(isAr ? 'en' : 'ar')}
-        >
-          {isAr ? 'English' : 'العربية'}
-        </button>
-        <button
-          title="Apply Nude palette"
-          aria-label="Toggle nude palette"
-          className={`rounded-full border px-2 py-1 text-[10px] font-semibold transition palette-button sm:px-3 ${
-            document.documentElement.classList.contains('palette-nude')
-              ? 'bg-stone-900 text-white'
-              : 'bg-white text-stone-700'
-          }`}
-          type="button"
-          onClick={(e) => {
-            e.preventDefault()
-            const ev = new CustomEvent('togglePalette')
-            window.dispatchEvent(ev)
-          }}
-        >
-          {isAr ? '🎨' : '🎨'}
-        </button>
-        {authUser ? (
-          <div className="flex items-center gap-2 rounded-full border border-brand-500/10 bg-white px-3 py-2 text-xs shadow-sm">
-            <span className="text-stone-600">
-              {t.auth.welcome}, {authUser.username}
-            </span>
+        {/* Mobile Controls */}
+        <div className="flex md:hidden items-center justify-end gap-2">
+          <Link
+            className="relative rounded-full border border-brand-500/20 bg-white px-3 py-2 text-xs font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
+            to="/cart"
+          >
+            {t.nav.cart}
+            {cartCount > 0 ? (
+              <span className="absolute -top-2 min-w-[1.1rem] rounded-full bg-stone-900 px-1 text-center text-[10px] font-bold text-white ltr:-right-2 rtl:-left-2">
+                {cartCount > 99 ? '99+' : cartCount}
+              </span>
+            ) : null}
+          </Link>
+          <button
+            className="rounded-full border border-brand-500/20 bg-white px-3 py-2 text-xs font-semibold text-stone-700 shadow-sm"
+            type="button"
+            onClick={() => setLang(isAr ? 'en' : 'ar')}
+          >
+            {isAr ? 'EN' : 'AR'}
+          </button>
+          <button
+            className={`rounded-full border px-2 py-1 text-[10px] font-semibold transition ${
+              document.documentElement.classList.contains('palette-nude')
+                ? 'bg-stone-900 text-white'
+                : 'bg-white text-stone-700'
+            }`}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              const ev = new CustomEvent('togglePalette')
+              window.dispatchEvent(ev)
+            }}
+          >
+            🎨
+          </button>
+          <button
+            className="rounded-full border border-brand-500/20 bg-white px-3 py-2 text-xs font-semibold text-stone-700 shadow-sm"
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            ☰
+          </button>
+        </div>
+      </header>
+
+      {/* Mobile Menu Dropdown */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed top-24 left-0 right-0 z-10 mx-4 rounded-2xl bg-white border border-brand-500/10 shadow-soft p-4 space-y-2 text-sm text-stone-600">
+          {navLinks}
+          {!authUser && (
+            <Link
+              className="block transition hover:text-stone-900 py-2 text-stone-900 font-semibold"
+              to="/login"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {t.auth.signIn}
+            </Link>
+          )}
+          {authUser && (
             <button
-              className="rounded-full border border-brand-500/20 px-3 py-1 text-[11px] font-semibold text-stone-700 transition hover:-translate-y-0.5 hover:shadow-glow"
+              className="w-full text-left transition hover:text-stone-900 py-2 text-stone-900 font-semibold"
               type="button"
-              onClick={onLogout}
+              onClick={() => {
+                onLogout()
+                setMobileMenuOpen(false)
+              }}
             >
               {t.auth.logout}
             </button>
-          </div>
-        ) : (
-          <Link
-            className="rounded-full border border-brand-500/20 bg-white px-4 py-2 text-xs font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
-            to="/login"
-          >
-            {t.auth.signIn}
-          </Link>
-        )}
-      </div>
-    </header>
+          )}
+        </div>
+      )}
+    </>
   )
 }
 
@@ -707,11 +783,11 @@ function Home({
         />
 
         <section className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-          <article className="fade-up relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-200 via-amber-100 to-white p-8 shadow-soft">
+          <article className="fade-up relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-200 via-amber-100 to-white p-5 sm:p-8 shadow-soft">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-500">
               {isAr ? 'تجربة تسوق فاخرة' : 'Luxury shopping'}
             </p>
-            <h1 className="mt-3 font-display text-3xl text-stone-900">
+            <h1 className="mt-3 font-display text-2xl sm:text-3xl text-stone-900">
               {isAr ? 'جمالك يبدأ من هنا' : 'Your beauty starts here'}
             </h1>
             <p className="mt-3 text-sm text-stone-600">
@@ -736,7 +812,7 @@ function Home({
             <div className="absolute -bottom-8 -end-8 h-32 w-32 rounded-full bg-white/60 blur-2xl" />
           </article>
 
-          <article className="fade-up rounded-3xl border border-brand-500/15 bg-white/80 p-6 shadow-soft">
+          <article className="fade-up rounded-3xl border border-brand-500/15 bg-white/80 p-5 sm:p-6 shadow-soft">
             <h2 className="font-display text-xl text-stone-900">
               {isAr ? 'لماذا Andiana؟' : 'Why Andiana?'}
             </h2>

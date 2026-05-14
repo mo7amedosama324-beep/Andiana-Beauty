@@ -64,7 +64,7 @@
   mix-blend-mode: multiply;
   opacity: 0;
   transition: opacity 220ms ease-in-out;
-  z-index: 9999;
+  z-index: -1;
   background: linear-gradient(90deg,
     #3A2D28 0% 16%,
     #A48374 16% 33%,
