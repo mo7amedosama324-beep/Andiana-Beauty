@@ -578,11 +578,7 @@ function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartCount = 0, nudeP
           <button
             title="Apply Nude palette"
             aria-label="Toggle nude palette"
-            className={`rounded-full border px-3 py-1 text-[10px] font-semibold transition palette-button ${
-              document.documentElement.classList.contains('palette-nude')
-                ? 'bg-stone-900 text-white'
-                : 'bg-white text-stone-700'
-            }`}
+            className="rounded-full border border-brand-500/50 bg-stone-900 px-3 py-1 text-[10px] font-semibold text-white transition palette-button hover:shadow-glow"
             type="button"
             onClick={(e) => {
               e.preventDefault()
@@ -636,11 +632,7 @@ function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartCount = 0, nudeP
             {isAr ? 'EN' : 'AR'}
           </button>
           <button
-            className={`rounded-full border px-2 py-1 text-[10px] font-semibold transition ${
-              document.documentElement.classList.contains('palette-nude')
-                ? 'bg-stone-900 text-white'
-                : 'bg-white text-stone-700'
-            }`}
+            className="rounded-full border border-brand-500/50 bg-stone-900 px-2 py-1 text-[10px] font-semibold text-white transition hover:shadow-glow"
             type="button"
             onClick={(e) => {
               e.preventDefault()
