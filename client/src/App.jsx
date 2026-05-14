@@ -573,7 +573,7 @@ function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartCount = 0, nudeP
         <button
           title="Apply Nude palette"
           aria-label="Toggle nude palette"
-          className={`ml-2 rounded-full border px-3 py-1 text-[11px] font-semibold transition palette-button ${
+          className={`rounded-full border px-2 py-1 text-[10px] font-semibold transition palette-button sm:px-3 ${
             document.documentElement.classList.contains('palette-nude')
               ? 'bg-stone-900 text-white'
               : 'bg-white text-stone-700'
@@ -585,7 +585,7 @@ function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartCount = 0, nudeP
             window.dispatchEvent(ev)
           }}
         >
-          {isAr ? '🎨 لوّن' : '🎨 Palette'}
+          {isAr ? '🎨' : '🎨'}
         </button>
         {authUser ? (
           <div className="flex items-center gap-2 rounded-full border border-brand-500/10 bg-white px-3 py-2 text-xs shadow-sm">
