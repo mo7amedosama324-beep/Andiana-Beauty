@@ -61,6 +61,7 @@ export default function PaletteCustomizer({ isAr, t = {} }) {
   const [selectedTheme, setSelectedTheme] = useState('default')
   const [customColors, setCustomColors] = useState({})
   const [showCustom, setShowCustom] = useState(false)
+  const [darkMode, setDarkMode] = useState(false)
 
   // Load saved theme from localStorage
   useEffect(() => {
@@ -83,6 +84,12 @@ export default function PaletteCustomizer({ isAr, t = {} }) {
     } else {
       applyColors(THEMES[selectedTheme].colors)
     }
+    
+    // Load dark mode preference
+    try {
+      const savedDarkMode = localStorage.getItem('dark_mode')
+      if (savedDarkMode) setDarkMode(savedDarkMode === '1')
+    } catch {}
   }, [])
 
   const applyColors = (colors) => {
@@ -121,6 +128,18 @@ export default function PaletteCustomizer({ isAr, t = {} }) {
       localStorage.setItem('andiana-theme', 'custom')
     }
   }
+
+  // Dark mode effect - apply to document
+  useEffect(() => {
+    try {
+      if (darkMode) {
+        document.documentElement.classList.add('dark-mode')
+      } else {
+        document.documentElement.classList.remove('dark-mode')
+      }
+      localStorage.setItem('dark_mode', darkMode ? '1' : '0')
+    } catch {}
+  }, [darkMode])
 
   const themeLabels = isAr ? {
     default: 'ذهبي',
@@ -261,6 +280,20 @@ export default function PaletteCustomizer({ isAr, t = {} }) {
                 />
               ))}
             </div>
+          </div>
+
+          {/* Dark Mode Toggle */}
+          <div className="border-t border-brand-500/10 pt-3">
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className={`w-full py-2 px-3 rounded-lg text-xs font-semibold transition ${
+                darkMode
+                  ? 'bg-stone-800 text-white border border-stone-600'
+                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200 border border-brand-500/10'
+              }`}
+            >
+              {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+            </button>
           </div>
 
           {/* Reset Button */}

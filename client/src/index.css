@@ -10,6 +10,29 @@
   --color-rose-100: #FFE4E6;
   --color-amber-200: #FCD34D;
   --color-amber-100: #FEF3C7;
+  
+  /* Light mode text and backgrounds */
+  --bg-primary: #ffffff;
+  --bg-secondary: #FDFCFB;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+}
+
+/* Dark Mode Variables */
+html.dark-mode {
+  --color-brand-500: #D4A574;
+  --color-brand-600: #BF9565;
+  --color-sand-50: #1a1a1a;
+  --color-sand-100: #2d2d2d;
+  --color-rose-200: #6b3a3a;
+  --color-rose-100: #4d2626;
+  --color-amber-200: #6b5a1f;
+  --color-amber-100: #4d3f0f;
+  
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --text-primary: #f3f4f6;
+  --text-secondary: #d1d5db;
 }
 
 /* Tailwind Theme with CSS Variables */
@@ -29,6 +52,62 @@
 
   --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
   --shadow-glow: 0 0 15px rgba(197, 168, 128, 0.3);
+}
+
+/* Dark Mode Transitions */
+* {
+  @apply transition-colors duration-300;
+}
+
+/* Global Dark Mode Styles */
+html.dark-mode {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+html.dark-mode body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+html.dark-mode .bg-sand-50 {
+  @apply bg-stone-900;
+}
+
+html.dark-mode .bg-white {
+  @apply bg-stone-800;
+}
+
+html.dark-mode .text-stone-600,
+html.dark-mode .text-stone-500,
+html.dark-mode .text-stone-400 {
+  @apply text-stone-300;
+}
+
+html.dark-mode .text-stone-900 {
+  @apply text-stone-50;
+}
+
+html.dark-mode .border-brand-500 {
+  @apply border-brand-500/40;
+}
+
+html.dark-mode .glass-surface {
+  @apply bg-stone-800/70;
+}
+
+html.dark-mode article {
+  @apply bg-stone-800/50 border-stone-700;
+}
+
+html.dark-mode input,
+html.dark-mode textarea,
+html.dark-mode select {
+  @apply bg-stone-700 text-stone-50 border-stone-600;
+}
+
+html.dark-mode input::placeholder {
+  @apply text-stone-400;
 }
 
 @layer components {
