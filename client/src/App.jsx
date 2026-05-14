@@ -44,7 +44,7 @@ export default function App() {
   const [categoriesError, setCategoriesError] = useState('')
   const [cart, setCart] = useState(null)
   const [cartBusy, setCartBusy] = useState(false)
-const apiBase = "https://osama324.pythonanywhere.com/api";
+  const apiBase = "https://osama324.pythonanywhere.com/api";
 
   const refreshCart = useCallback(async () => {
     const id = localStorage.getItem(CART_STORAGE_KEY)
@@ -157,33 +157,61 @@ const apiBase = "https://osama324.pythonanywhere.com/api";
   }
 
   const fetchProfile = async () => {
-    const response = await fetch(`${apiBase}/me/`, { credentials: 'include' })
+    const token = localStorage.getItem('access_token')
+    if (!token) throw new Error('No token found')
+
+    const response = await fetch(`${apiBase}/me/`, { 
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      }
+    })
     if (!response.ok) throw new Error('Unauthorized')
     return response.json()
   }
 
-  const refreshAccessCookie = async () => {
-    const response = await fetch(`${apiBase}/auth/token/cookie/refresh/`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
-    })
-    return response.ok
+  const refreshAccessToken = async () => {
+    const refreshToken = localStorage.getItem('refresh_token')
+    if (!refreshToken) return false
+
+    try {
+      const response = await fetch(`${apiBase}/token/cookie/refresh/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh: refreshToken }),
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        localStorage.setItem('access_token', data.access)
+        if (data.refresh) localStorage.setItem('refresh_token', data.refresh)
+        return true
+      } else {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+        return false
+      }
+    } catch {
+      return false
+    }
   }
 
   const handleLogin = async (payload) => {
     setAuthError('')
     setAuthLoading(true)
     try {
-      const response = await fetch(`${apiBase}/token/cookie/`, { // شلنا كلمة auth, {
+      const response = await fetch(`${apiBase}/token/cookie/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(payload),
       })
       if (!response.ok) throw new Error('Login failed')
-      await response.json()
+      
+      const data = await response.json()
+      localStorage.setItem('access_token', data.access)
+      localStorage.setItem('refresh_token', data.refresh)
+
       const profile = await fetchProfile()
       setAuthUser(profile)
       return true
@@ -195,8 +223,20 @@ const apiBase = "https://osama324.pythonanywhere.com/api";
     }
   }
 
-  const handleLogout = () => {
-    fetch(`${apiBase}/logout/`, { method: 'POST', credentials: 'include' })
+  const handleLogout = async () => {
+    const refreshToken = localStorage.getItem('refresh_token')
+    if (refreshToken) {
+      try {
+        await fetch(`${apiBase}/logout/`, { 
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh: refreshToken }),
+        })
+      } catch (e) {}
+    }
+    
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
     setAuthUser(null)
   }
 
@@ -237,7 +277,7 @@ const apiBase = "https://osama324.pythonanywhere.com/api";
         const profile = await fetchProfile()
         if (!cancelled) setAuthUser(profile)
       } catch {
-        const refreshed = await refreshAccessCookie()
+        const refreshed = await refreshAccessToken()
         if (cancelled) return
         if (refreshed) {
           try {
@@ -460,9 +500,9 @@ const apiBase = "https://osama324.pythonanywhere.com/api";
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   )
 }
-
 function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartCount = 0, nudePalette, onTogglePalette }) {
   return (
     <header className="glass-surface sticky top-4 z-20 flex flex-wrap items-center gap-4 rounded-2xl border border-brand-500/10 px-5 py-3 shadow-soft">
