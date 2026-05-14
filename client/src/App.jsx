@@ -414,6 +414,8 @@ export default function App() {
             cartItemCount={cartItemCount}
             onAddToCart={addToCart}
             cartBusy={cartBusy}
+            nudePalette={nudePalette}
+            onTogglePalette={() => setNudePalette((s) => !s)}
           />
         }
       />
@@ -436,6 +438,8 @@ export default function App() {
             cartItemCount={cartItemCount}
             onAddToCart={addToCart}
             cartBusy={cartBusy}
+            nudePalette={nudePalette}
+            onTogglePalette={() => setNudePalette((s) => !s)}
           />
         }
       />
@@ -456,6 +460,8 @@ export default function App() {
             checkout={checkout}
             cartBusy={cartBusy}
             cartItemCount={cartItemCount}
+            nudePalette={nudePalette}
+            onTogglePalette={() => setNudePalette((s) => !s)}
           />
         }
       />
@@ -469,6 +475,8 @@ export default function App() {
             authUser={authUser}
             onLogout={handleLogout}
             cartItemCount={cartItemCount}
+            nudePalette={nudePalette}
+            onTogglePalette={() => setNudePalette((s) => !s)}
           />
         }
       />
@@ -476,7 +484,7 @@ export default function App() {
         path="/admin-dashboard"
         element={
           authUser?.is_staff ? (
-            <AdminDashboard isAr={isAr} t={t} apiBase={apiBase} />
+            <AdminDashboard isAr={isAr} t={t} apiBase={apiBase} nudePalette={nudePalette} onTogglePalette={() => setNudePalette((s) => !s)} />
           ) : (
             <Navigate to="/login" replace />
           )
@@ -674,6 +682,8 @@ function Home({
   cartItemCount,
   onAddToCart,
   cartBusy,
+  nudePalette,
+  onTogglePalette,
 }) {
   const apiOrigin = getApiOrigin(apiBase)
   const activeProducts = products.filter((p) => p.is_active !== false)
@@ -842,6 +852,8 @@ function ShopPage({
   cartItemCount,
   onAddToCart,
   cartBusy,
+  nudePalette,
+  onTogglePalette,
 }) {
   const apiOrigin = getApiOrigin(apiBase)
   const [activeCategory, setActiveCategory] = useState('all')
@@ -982,7 +994,7 @@ function ScrollReveal({ children, className = '', rootMargin = '0px 0px -11% 0px
   )
 }
 
-function AboutPage({ isAr, setLang, t, authUser, onLogout, cartItemCount }) {
+function AboutPage({ isAr, setLang, t, authUser, onLogout, cartItemCount, nudePalette, onTogglePalette }) {
   const about = isAr
     ? {
         title: 'من نحن',
@@ -1163,6 +1175,8 @@ function CartPage({
   checkout,
   cartBusy,
   cartItemCount,
+  nudePalette,
+  onTogglePalette,
 }) {
   const tc = t.cartPage
   const apiOrigin = getApiOrigin(apiBase)
@@ -1213,6 +1227,8 @@ function CartPage({
             authUser={authUser}
             onLogout={onLogout}
             cartCount={0}
+            nudePalette={nudePalette}
+            onTogglePalette={onTogglePalette}
           />
           <section className="rounded-3xl border border-brand-500/10 bg-white/90 p-8 text-center shadow-soft">
             <p className="font-display text-xl text-stone-900">{tc.thankYou}</p>
@@ -1249,6 +1265,8 @@ function CartPage({
           authUser={authUser}
           onLogout={onLogout}
           cartCount={cartItemCount}
+          nudePalette={nudePalette}
+          onTogglePalette={onTogglePalette}
         />
         <div>
           <h1 className="font-display text-3xl text-stone-900">{tc.title}</h1>
@@ -1449,7 +1467,7 @@ function Login({ isAr, onLogin, loading, error, t }) {
   )
 }
 
-function AdminDashboard({ isAr, t, apiBase }) {
+function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
   const [products, setProducts] = useState([])
   const [users, setUsers] = useState([])
   const [categories, setCategories] = useState([])
