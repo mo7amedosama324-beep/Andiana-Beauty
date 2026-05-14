@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import './App.css'
+import PaletteCustomizer from './PaletteCustomizer'
 
 const CART_STORAGE_KEY = 'andiana_cart_id'
 
@@ -394,6 +395,7 @@ export default function App() {
   return (
     <>
       <div className="palette-overlay" aria-hidden />
+      <PaletteCustomizer isAr={isAr} t={t} />
       <Routes>
       <Route
         path="/"

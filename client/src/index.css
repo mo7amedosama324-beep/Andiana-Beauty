@@ -1,12 +1,28 @@
 @import "tailwindcss";
 
-/* إضافة الألوان والخطوط الجديدة الخاصة بك (طريقة v4) */
-@theme {
+/* CSS Variables for Dynamic Colors */
+:root {
   --color-brand-500: #C5A880;
   --color-brand-600: #A68B66;
   --color-sand-50: #FDFCFB;
   --color-sand-100: #F7F3F0;
-  
+  --color-rose-200: #FECDD3;
+  --color-rose-100: #FFE4E6;
+  --color-amber-200: #FCD34D;
+  --color-amber-100: #FEF3C7;
+}
+
+/* Tailwind Theme with CSS Variables */
+@theme {
+  --color-brand-500: rgb(var(--color-brand-500-rgb, 197 168 128));
+  --color-brand-600: rgb(var(--color-brand-600-rgb, 166 139 102));
+  --color-sand-50: rgb(var(--color-sand-50-rgb, 253 252 251));
+  --color-sand-100: rgb(var(--color-sand-100-rgb, 247 243 240));
+  --color-rose-200: rgb(var(--color-rose-200-rgb, 254 205 211));
+  --color-rose-100: rgb(var(--color-rose-100-rgb, 255 228 230));
+  --color-amber-200: rgb(var(--color-amber-200-rgb, 252 211 77));
+  --color-amber-100: rgb(var(--color-amber-100-rgb, 254 243 199));
+
   --font-display: "Playfair Display", serif;
   --font-ar: "Tajawal", sans-serif;
   --font-en: "Inter", sans-serif;
