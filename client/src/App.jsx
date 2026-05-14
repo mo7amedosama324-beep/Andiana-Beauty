@@ -518,17 +518,17 @@ function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartCount = 0, nudeP
 
   const navLinks = (
     <>
-      <Link className="block transition hover:text-stone-900 py-2" to="/" onClick={() => setMobileMenuOpen(false)}>
+      <Link className="block transition hover:text-stone-900 dark:hover:text-stone-100 py-2 dark:text-stone-300" to="/" onClick={() => setMobileMenuOpen(false)}>
         {t.nav.home}
       </Link>
-      <Link className="block transition hover:text-stone-900 py-2" to="/shop" onClick={() => setMobileMenuOpen(false)}>
+      <Link className="block transition hover:text-stone-900 dark:hover:text-stone-100 py-2 dark:text-stone-300" to="/shop" onClick={() => setMobileMenuOpen(false)}>
         {t.nav.shop}
       </Link>
-      <Link className="block transition hover:text-stone-900 py-2" to="/about" onClick={() => setMobileMenuOpen(false)}>
+      <Link className="block transition hover:text-stone-900 dark:hover:text-stone-100 py-2 dark:text-stone-300" to="/about" onClick={() => setMobileMenuOpen(false)}>
         {t.nav.about}
       </Link>
       {authUser?.is_staff ? (
-        <Link className="block transition hover:text-stone-900 py-2" to="/admin-dashboard" onClick={() => setMobileMenuOpen(false)}>
+        <Link className="block transition hover:text-stone-900 dark:hover:text-stone-100 py-2 dark:text-stone-300" to="/admin-dashboard" onClick={() => setMobileMenuOpen(false)}>
           {t.nav.admin}
         </Link>
       ) : null}
@@ -537,7 +537,7 @@ function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartCount = 0, nudeP
 
   return (
     <>
-      <header className="glass-surface sticky top-4 z-20 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-500/10 px-5 py-3 shadow-soft">
+      <header className="glass-surface dark:bg-stone-800 sticky top-4 z-20 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-500/10 dark:border-stone-700 px-5 py-3 shadow-soft dark:shadow-none">
         <div className="flex items-center gap-4">
           <img
             className="h-14 w-14 rounded-xl object-contain shadow-sm"
@@ -545,56 +545,43 @@ function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartCount = 0, nudeP
             alt="Andiana Beauty"
           />
           <div className="hidden sm:block">
-            <p className="font-display text-lg text-stone-900">Andiana</p>
-            <p className="text-xs uppercase tracking-[0.3em] text-stone-400">Beauty</p>
+            <p className="font-display text-lg text-stone-900 dark:text-stone-100">Andiana</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500">Beauty</p>
           </div>
         </div>
 
         {/* Desktop Nav */}
-        <nav className="hidden flex-1 items-center justify-center gap-6 text-sm font-medium text-stone-600 md:flex">
+        <nav className="hidden flex-1 items-center justify-center gap-6 text-sm font-medium text-stone-600 dark:text-stone-400 md:flex">
           {navLinks}
         </nav>
 
         {/* Desktop Right Controls */}
         <div className="hidden md:flex flex-1 items-center justify-end gap-3">
           <Link
-            className="relative rounded-full border border-brand-500/20 bg-white px-4 py-2 text-xs font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
+            className="relative rounded-full border border-brand-500/20 bg-white dark:bg-stone-700 dark:border-stone-600 px-4 py-2 text-xs font-semibold text-stone-700 dark:text-stone-100 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow dark:hover:bg-stone-600"
             to="/cart"
           >
             {t.nav.cart}
             {cartCount > 0 ? (
-              <span className="absolute -top-2 min-w-[1.1rem] rounded-full bg-stone-900 px-1 text-center text-[10px] font-bold text-white ltr:-right-2 rtl:-left-2">
+              <span className="absolute -top-2 min-w-[1.1rem] rounded-full bg-stone-900 dark:bg-stone-300 px-1 text-center text-[10px] font-bold text-white dark:text-stone-900 ltr:-right-2 rtl:-left-2">
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
             ) : null}
           </Link>
           <button
-            className="rounded-full border border-brand-500/20 bg-white px-4 py-2 text-xs font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
+            className="rounded-full border border-brand-500/20 bg-white dark:bg-stone-700 dark:border-stone-600 px-4 py-2 text-xs font-semibold text-stone-700 dark:text-stone-100 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow dark:hover:bg-stone-600"
             type="button"
             onClick={() => setLang(isAr ? 'en' : 'ar')}
           >
             {isAr ? 'English' : 'العربية'}
           </button>
-          <button
-            title="Apply Nude palette"
-            aria-label="Toggle nude palette"
-            className="rounded-full border border-brand-500/50 bg-stone-900 px-3 py-1 text-[10px] font-semibold text-white transition palette-button hover:shadow-glow"
-            type="button"
-            onClick={(e) => {
-              e.preventDefault()
-              const ev = new CustomEvent('togglePalette')
-              window.dispatchEvent(ev)
-            }}
-          >
-            🎨
-          </button>
           {authUser ? (
-            <div className="flex items-center gap-2 rounded-full border border-brand-500/10 bg-white px-3 py-2 text-xs shadow-sm">
-              <span className="text-stone-600">
+            <div className="flex items-center gap-2 rounded-full border border-brand-500/10 dark:border-stone-600 bg-white dark:bg-stone-700 px-3 py-2 text-xs shadow-sm">
+              <span className="text-stone-600 dark:text-stone-300">
                 {t.auth.welcome}, {authUser.username}
               </span>
               <button
-                className="rounded-full border border-brand-500/20 px-3 py-1 text-[11px] font-semibold text-stone-700 transition hover:-translate-y-0.5 hover:shadow-glow"
+                className="rounded-full border border-brand-500/20 dark:border-stone-600 px-3 py-1 text-[11px] font-semibold text-stone-700 dark:text-stone-100 dark:bg-stone-600 transition hover:-translate-y-0.5 hover:shadow-glow dark:hover:bg-stone-500"
                 type="button"
                 onClick={onLogout}
               >
@@ -603,7 +590,7 @@ function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartCount = 0, nudeP
             </div>
           ) : (
             <Link
-              className="rounded-full border border-brand-500/20 bg-white px-4 py-2 text-xs font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
+              className="rounded-full border border-brand-500/20 bg-white dark:bg-stone-700 dark:border-stone-600 px-4 py-2 text-xs font-semibold text-stone-700 dark:text-stone-100 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow dark:hover:bg-stone-600"
               to="/login"
             >
               {t.auth.signIn}
@@ -614,36 +601,25 @@ function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartCount = 0, nudeP
         {/* Mobile Controls */}
         <div className="flex md:hidden items-center justify-end gap-2">
           <Link
-            className="relative rounded-full border border-brand-500/20 bg-white px-3 py-2 text-xs font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
+            className="relative rounded-full border border-brand-500/20 bg-white dark:bg-stone-700 dark:border-stone-600 px-3 py-2 text-xs font-semibold text-stone-700 dark:text-stone-100 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow dark:hover:bg-stone-600"
             to="/cart"
           >
             {t.nav.cart}
             {cartCount > 0 ? (
-              <span className="absolute -top-2 min-w-[1.1rem] rounded-full bg-stone-900 px-1 text-center text-[10px] font-bold text-white ltr:-right-2 rtl:-left-2">
+              <span className="absolute -top-2 min-w-[1.1rem] rounded-full bg-stone-900 dark:bg-stone-300 px-1 text-center text-[10px] font-bold text-white dark:text-stone-900 ltr:-right-2 rtl:-left-2">
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
             ) : null}
           </Link>
           <button
-            className="rounded-full border border-brand-500/20 bg-white px-3 py-2 text-xs font-semibold text-stone-700 shadow-sm"
+            className="rounded-full border border-brand-500/20 bg-white dark:bg-stone-700 dark:border-stone-600 px-3 py-2 text-xs font-semibold text-stone-700 dark:text-stone-100 shadow-sm dark:hover:bg-stone-600"
             type="button"
             onClick={() => setLang(isAr ? 'en' : 'ar')}
           >
             {isAr ? 'EN' : 'AR'}
           </button>
           <button
-            className="rounded-full border border-brand-500/50 bg-stone-900 px-2 py-1 text-[10px] font-semibold text-white transition hover:shadow-glow"
-            type="button"
-            onClick={(e) => {
-              e.preventDefault()
-              const ev = new CustomEvent('togglePalette')
-              window.dispatchEvent(ev)
-            }}
-          >
-            🎨
-          </button>
-          <button
-            className="rounded-full border border-brand-500/20 bg-white px-3 py-2 text-xs font-semibold text-stone-700 shadow-sm"
+            className="rounded-full border border-brand-500/20 bg-white dark:bg-stone-700 dark:border-stone-600 px-3 py-2 text-xs font-semibold text-stone-700 dark:text-stone-100 shadow-sm"
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
@@ -654,11 +630,11 @@ function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartCount = 0, nudeP
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed top-24 left-0 right-0 z-10 mx-4 rounded-2xl bg-white border border-brand-500/10 shadow-soft p-4 space-y-2 text-sm text-stone-600">
+        <div className="md:hidden fixed top-24 left-0 right-0 z-10 mx-4 rounded-2xl bg-white dark:bg-stone-800 border border-brand-500/10 dark:border-stone-700 shadow-soft p-4 space-y-2 text-sm text-stone-600 dark:text-stone-300">
           {navLinks}
           {!authUser && (
             <Link
-              className="block transition hover:text-stone-900 py-2 text-stone-900 font-semibold"
+              className="block transition hover:text-stone-900 dark:hover:text-stone-100 py-2 text-stone-900 dark:text-stone-100 font-semibold"
               to="/login"
               onClick={() => setMobileMenuOpen(false)}
             >
@@ -667,7 +643,7 @@ function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartCount = 0, nudeP
           )}
           {authUser && (
             <button
-              className="w-full text-left transition hover:text-stone-900 py-2 text-stone-900 font-semibold"
+              className="w-full text-left transition hover:text-stone-900 dark:hover:text-stone-100 py-2 text-stone-900 dark:text-stone-100 font-semibold"
               type="button"
               onClick={() => {
                 onLogout()
