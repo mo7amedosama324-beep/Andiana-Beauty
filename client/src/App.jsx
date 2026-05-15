@@ -1533,16 +1533,33 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
     is_active: true,
   })
 
+  // Helper function for authenticated fetch with Bearer token
+  const authFetch = async (url, options = {}) => {
+    const token = localStorage.getItem('access_token')
+    if (!token) throw new Error('No token found')
+
+    const headers = options.headers || {}
+    
+    // Don't override Content-Type if it's FormData (for file uploads)
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = headers['Content-Type'] || 'application/json'
+    }
+    
+    headers['Authorization'] = `Bearer ${token}`
+
+    return fetch(url, { ...options, headers })
+  }
+
   const fetchAdminData = async () => {
     setLoading(true)
     setError('')
     try {
       const [productsResponse, usersResponse, categoriesResponse, ordersResponse] =
         await Promise.all([
-          fetch(`${apiBase}/products/`, { credentials: 'include' }),
-          fetch(`${apiBase}/admin/users/`, { credentials: 'include' }),
-          fetch(`${apiBase}/categories/`, { credentials: 'include' }),
-          fetch(`${apiBase}/orders/`, { credentials: 'include' }),
+          authFetch(`${apiBase}/products/`),
+          authFetch(`${apiBase}/admin/users/`),
+          authFetch(`${apiBase}/categories/`),
+          authFetch(`${apiBase}/orders/`),
         ])
       if (!productsResponse.ok || !usersResponse.ok || !categoriesResponse.ok) {
         throw new Error('Failed to load admin data')
@@ -1603,7 +1620,7 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
         ? `${apiBase}/products/${productForm.id}/`
         : `${apiBase}/products/`
       const method = productForm.id ? 'PATCH' : 'POST'
-      const response = await fetch(target, { method, credentials: 'include', body: payload })
+      const response = await authFetch(target, { method, body: payload })
       if (!response.ok) throw new Error('Save failed')
       resetProductForm()
       fetchAdminData()
@@ -1629,9 +1646,8 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
   const handleProductDelete = async (productId) => {
     setError('')
     try {
-      const response = await fetch(`${apiBase}/products/${productId}/`, {
+      const response = await authFetch(`${apiBase}/products/${productId}/`, {
         method: 'DELETE',
-        credentials: 'include',
       })
       if (!response.ok) throw new Error('Delete failed')
       fetchAdminData()
@@ -1650,10 +1666,9 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
         ? `${apiBase}/categories/${categoryForm.id}/`
         : `${apiBase}/categories/`
       const method = categoryForm.id ? 'PATCH' : 'POST'
-      const response = await fetch(target, {
+      const response = await authFetch(target, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ name: categoryForm.name }),
       })
       if (!response.ok) throw new Error('Category save failed')
@@ -1671,9 +1686,8 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
   const handleCategoryDelete = async (categoryId) => {
     setError('')
     try {
-      const response = await fetch(`${apiBase}/categories/${categoryId}/`, {
+      const response = await authFetch(`${apiBase}/categories/${categoryId}/`, {
         method: 'DELETE',
-        credentials: 'include',
       })
       if (!response.ok) throw new Error('Category delete failed')
       fetchAdminData()
@@ -1685,10 +1699,9 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
   const handleToggleAdmin = async (user) => {
     setError('')
     try {
-      const response = await fetch(`${apiBase}/admin/users/${user.id}/`, {
+      const response = await authFetch(`${apiBase}/admin/users/${user.id}/`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ is_staff: !user.is_staff }),
       })
       if (!response.ok) throw new Error('Update failed')
