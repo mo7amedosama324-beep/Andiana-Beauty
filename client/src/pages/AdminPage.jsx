@@ -67,22 +67,33 @@ export default function AdminPage() {
       payload.append('name', productForm.name)
       payload.append('description', productForm.description)
       payload.append('price', productForm.price)
+      
       if (productForm.sale_price) payload.append('sale_price', productForm.sale_price)
-      payload.append('image_url', productForm.image_url)
+      
+      // شلنا image_url خالص لأن الباك إيند مابقاش يقبلها
       payload.append('is_active', productForm.is_active ? 'true' : 'false')
+      
+      // الصورة الأساسية
       if (productForm.imageFile) payload.append('image', productForm.imageFile)
+
+      /* ملاحظة للهندسة: هنا هنحتاج نبعت الألوان والصور الإضافية لو ضفناهم في الـ State
+         دلوقتي الـ Payload ده هيخلي المنتج يتحفظ من غير ما يضرب Error
+      */
+
       const target = productForm.id ? `${apiBase}/products/${productForm.id}/` : `${apiBase}/products/`
       const method = productForm.id ? 'PATCH' : 'POST'
+      
       const response = await authFetch(target, { method, body: payload })
+      
       if (!response.ok) throw new Error('save')
-      pushToast({ type: 'success', message: isAr ? 'تم حفظ المنتج.' : 'Product saved.' })
+      
+      pushToast({ type: 'success', message: isAr ? 'تم حفظ المنتج بنجاح.' : 'Product saved successfully.' })
       resetProductForm()
       refreshAdminData()
     } catch {
-      setError(isAr ? 'فشل حفظ المنتج.' : 'Failed to save product.')
+      setError(isAr ? 'فشل حفظ المنتج. تأكد من البيانات.' : 'Failed to save product.')
     }
-  }
-
+}
   const handleCategorySubmit = async (event) => {
     event.preventDefault()
     setError('')
