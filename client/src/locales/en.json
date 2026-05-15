@@ -1,0 +1,118 @@
+{
+  "nav": {
+    "home": "Home",
+    "shop": "Shop",
+    "about": "About us",
+    "admin": "Admin",
+    "cart": "Bag"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "welcome": "Welcome",
+    "logout": "Logout",
+    "back": "Back to store"
+  },
+  "home": {
+    "heroEyebrow": "Luxury beauty store",
+    "heroTitle": "Your beauty starts here",
+    "heroBody": "Discover signature perfumes and beauty essentials in curated categories.",
+    "ctaPrimary": "Shop now",
+    "ctaSecondary": "About us",
+    "whyTitle": "Why Andiana?",
+    "why": [
+      "Fast delivery across Egypt.",
+      "Authentic, curated products.",
+      "Personalized customer support."
+    ],
+    "categoriesTitle": "Categories",
+    "categoriesBody": "Categories are managed from the admin dashboard.",
+    "featuredTitle": "Latest products",
+    "featuredBody": "Freshly added to the store.",
+    "viewAll": "View all",
+    "noCategories": "No categories yet.",
+    "noProducts": "No products yet."
+  },
+  "shop": {
+    "title": "Shop",
+    "body": "Browse products by category.",
+    "all": "All",
+    "empty": "No products in this category."
+  },
+  "cartPage": {
+    "title": "Your bag",
+    "empty": "Your bag is empty.",
+    "shopCta": "Continue shopping",
+    "total": "Total",
+    "checkoutTitle": "Checkout",
+    "name": "Full name",
+    "phone": "Phone",
+    "address": "Delivery address",
+    "placeOrder": "Place order",
+    "placing": "Placing order…",
+    "thankYou": "Thank you! Your order was placed.",
+    "orderId": "Order #",
+    "guestNote": "No account needed — we only need your delivery details.",
+    "remove": "Remove",
+    "step1": "Cart",
+    "step2": "Details",
+    "step3": "Confirm",
+    "tracking": "Track order"
+  },
+  "about": {
+    "title": "About us",
+    "subtitle": "Andiana Beauty",
+    "intro": "A brand that took its first breath online, then deepened with people who believe beauty deserves time, advice, and a gentle human touch.",
+    "sections": [
+      {
+        "eyebrow": "How we grew",
+        "title": "Digital first, then an open door",
+        "body": "We began as an e-commerce story; as demand grew it became clear the experience needed a clearer presence. Late 2020 leaned heavily on remote service, and in early 2021 we opened a space to match that momentum."
+      },
+      {
+        "eyebrow": "The roots",
+        "title": "Makeup & skincare before the signboard",
+        "body": "The starting point was not a launch poster—it was small circles trading shades, textures, and scents, driven by a sincere love of makeup and skin."
+      },
+      {
+        "eyebrow": "Now",
+        "title": "Same voice, new chapters",
+        "body": "We still curate with a careful eye, keep guidance concise and honest, and greet first-timers the way we greet long-time followers."
+      }
+    ]
+  },
+  "admin": {
+    "panel": "Admin panel",
+    "description": "Manage orders, products, categories, and users from one place with a clearer, faster-scanning interface.",
+    "back": "Back to store",
+    "orders": "Orders",
+    "products": "Manage products",
+    "categories": "Manage categories",
+    "users": "Manage users",
+    "newProduct": "New product",
+    "newCategory": "New category",
+    "edit": "Edit",
+    "delete": "Delete",
+    "saveProduct": "Add product",
+    "updateProduct": "Update product",
+    "saveCategory": "Add category",
+    "updateCategory": "Update category",
+    "confirmDeleteTitle": "Delete item?",
+    "confirmDeleteBody": "This action cannot be undone.",
+    "confirm": "Delete",
+    "cancel": "Cancel"
+  },
+  "login": {
+    "subtitle": "Access your account to continue.",
+    "username": "Username",
+    "password": "Password",
+    "show": "Show",
+    "hide": "Hide",
+    "signingIn": "Signing in..."
+  },
+  "toast": {
+    "saved": "Saved successfully.",
+    "deleted": "Deleted successfully.",
+    "error": "Something went wrong.",
+    "info": "Updated."
+  }
+}
