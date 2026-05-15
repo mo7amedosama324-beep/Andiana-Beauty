@@ -10,8 +10,18 @@ export default function AdminPage() {
   const { pushToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  
+  // الفورم الأساسية
   const [categoryForm, setCategoryForm] = useState({ id: null, name: '' })
-  const [productForm, setProductForm] = useState({ id: null, category: '', name: '', description: '', price: '', sale_price: '', image_url: '', imageFile: null, is_active: true })
+  const [productForm, setProductForm] = useState({ 
+    id: null, category: '', name: '', description: '', 
+    price: '', sale_price: '', imageFile: null, is_active: true 
+  })
+  
+  // State للألوان والصور الإضافية
+  const [productColors, setProductColors] = useState([]) // [{name: '', code: '#000000'}]
+  const [additionalImages, setAdditionalImages] = useState([]) // Array of Files
+
   const [deleteTarget, setDeleteTarget] = useState(null)
 
   const stats = useMemo(() => ([
@@ -55,8 +65,22 @@ export default function AdminPage() {
     refreshAdminData()
   }, [refreshAdminData])
 
-  const resetProductForm = () => setProductForm({ id: null, category: '', name: '', description: '', price: '', sale_price: '', image_url: '', imageFile: null, is_active: true })
+  const resetProductForm = () => {
+    setProductForm({ id: null, category: '', name: '', description: '', price: '', sale_price: '', imageFile: null, is_active: true })
+    setProductColors([])
+    setAdditionalImages([])
+  }
+  
   const resetCategoryForm = () => setCategoryForm({ id: null, name: '' })
+
+  // دوال التحكم في الألوان
+  const addColorField = () => setProductColors([...productColors, { color_name: '', color_code: '#000000' }])
+  const removeColorField = (index) => setProductColors(productColors.filter((_, i) => i !== index))
+  const updateColorField = (index, field, value) => {
+    const newColors = [...productColors]
+    newColors[index][field] = value
+    setProductColors(newColors)
+  }
 
   const handleProductSubmit = async (event) => {
     event.preventDefault()
@@ -67,24 +91,24 @@ export default function AdminPage() {
       payload.append('name', productForm.name)
       payload.append('description', productForm.description)
       payload.append('price', productForm.price)
-      
       if (productForm.sale_price) payload.append('sale_price', productForm.sale_price)
-      
-      // شلنا image_url خالص لأن الباك إيند مابقاش يقبلها
       payload.append('is_active', productForm.is_active ? 'true' : 'false')
       
       // الصورة الأساسية
       if (productForm.imageFile) payload.append('image', productForm.imageFile)
 
-      /* ملاحظة للهندسة: هنا هنحتاج نبعت الألوان والصور الإضافية لو ضفناهم في الـ State
-         دلوقتي الـ Payload ده هيخلي المنتج يتحفظ من غير ما يضرب Error
-      */
+      // إرسال الصور الإضافية (لازم الباك إيند يكون مستني الاسم ده)
+      additionalImages.forEach((file) => {
+        payload.append('uploaded_images', file)
+      })
+
+      // إرسال الألوان كـ JSON string
+      payload.append('colors_data', JSON.stringify(productColors))
 
       const target = productForm.id ? `${apiBase}/products/${productForm.id}/` : `${apiBase}/products/`
       const method = productForm.id ? 'PATCH' : 'POST'
       
       const response = await authFetch(target, { method, body: payload })
-      
       if (!response.ok) throw new Error('save')
       
       pushToast({ type: 'success', message: isAr ? 'تم حفظ المنتج بنجاح.' : 'Product saved successfully.' })
@@ -93,7 +117,8 @@ export default function AdminPage() {
     } catch {
       setError(isAr ? 'فشل حفظ المنتج. تأكد من البيانات.' : 'Failed to save product.')
     }
-}
+  }
+
   const handleCategorySubmit = async (event) => {
     event.preventDefault()
     setError('')
@@ -201,8 +226,32 @@ export default function AdminPage() {
               <label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'القسم' : 'Category'}</span><select className="input-surface" value={productForm.category} onChange={(event) => setProductForm((prev) => ({ ...prev, category: event.target.value }))}><option value="">{isAr ? 'اختر القسم' : 'Select category'}</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
               <label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'الوصف' : 'Description'}</span><textarea className="input-surface min-h-[110px]" value={productForm.description} onChange={(event) => setProductForm((prev) => ({ ...prev, description: event.target.value }))} /></label>
               <div className="grid gap-4 sm:grid-cols-3"><label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'السعر' : 'Price'}</span><input className="input-surface" type="number" step="0.01" value={productForm.price} onChange={(event) => setProductForm((prev) => ({ ...prev, price: event.target.value }))} /></label><label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'سعر التخفيض' : 'Sale price'}</span><input className="input-surface" type="number" step="0.01" value={productForm.sale_price} onChange={(event) => setProductForm((prev) => ({ ...prev, sale_price: event.target.value }))} /></label><label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'نشط' : 'Active'}</span><input className="h-11 rounded-2xl border border-brand-200 bg-white px-4" type="checkbox" checked={productForm.is_active} onChange={(event) => setProductForm((prev) => ({ ...prev, is_active: event.target.checked }))} /></label></div>
-              <label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'رابط الصورة' : 'Image URL'}</span><input className="input-surface" value={productForm.image_url} onChange={(event) => setProductForm((prev) => ({ ...prev, image_url: event.target.value }))} /></label>
-              <label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'رفع صورة' : 'Upload image'}</span><input className="rounded-2xl border border-brand-200 bg-white px-4 py-3 text-sm" type="file" accept="image/*" onChange={(event) => setProductForm((prev) => ({ ...prev, imageFile: event.target.files?.[0] || null }))} /></label>
+              
+              {/* رفع الصورة الأساسية */}
+              <label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'الصورة الأساسية' : 'Main Image'}</span><input className="rounded-2xl border border-brand-200 bg-white px-4 py-3 text-sm" type="file" accept="image/*" onChange={(event) => setProductForm((prev) => ({ ...prev, imageFile: event.target.files?.[0] || null }))} /></label>
+
+              {/* قسم الألوان الجديد */}
+              <div className="space-y-3 rounded-xl border border-brand-100 bg-white p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-stone-700">{isAr ? 'الألوان المتاحة' : 'Available Colors'}</span>
+                  <button type="button" onClick={addColorField} className="text-xs font-bold text-brand-600 underline">{isAr ? '+ إضافة لون' : '+ Add Color'}</button>
+                </div>
+                {productColors.map((color, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <input type="text" placeholder={isAr ? "اسم اللون" : "Color Name"} className="input-surface text-xs" value={color.color_name} onChange={(e) => updateColorField(idx, 'color_name', e.target.value)} />
+                    <input type="color" className="h-10 w-12 cursor-pointer rounded-lg border-none p-0" value={color.color_code} onChange={(e) => updateColorField(idx, 'color_code', e.target.value)} />
+                    <button type="button" onClick={() => removeColorField(idx)} className="text-rose-500">×</button>
+                  </div>
+                ))}
+              </div>
+
+              {/* قسم الصور الإضافية */}
+              <label className="grid gap-2 text-sm font-semibold text-stone-700">
+                <span>{isAr ? 'صور إضافية للمنتج' : 'Additional Images'}</span>
+                <input className="rounded-2xl border border-brand-200 bg-white px-4 py-3 text-sm" type="file" accept="image/*" multiple onChange={(event) => setAdditionalImages(Array.from(event.target.files || []))} />
+                {additionalImages.length > 0 && <p className="text-xs text-brand-600">{additionalImages.length} {isAr ? 'صور مختارة' : 'images selected'}</p>}
+              </label>
+
               <div className="flex gap-3"><button className="button-surface bg-stone-900 text-white" type="button" onClick={handleProductSubmit}>{productForm.id ? t.admin.updateProduct : t.admin.saveProduct}</button></div>
             </div>
           </fieldset>
@@ -219,7 +268,7 @@ export default function AdminPage() {
                     <td className="px-4 py-3 font-semibold text-stone-900">{formatPrice(product.sale_price || product.price, isAr)}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2">
-                        <button className="button-surface border border-brand-200 bg-white text-stone-700" type="button" onClick={() => setProductForm({ id: product.id, category: product.category || '', name: product.name || '', description: product.description || '', price: product.price || '', sale_price: product.sale_price || '', image_url: product.image_url || '', imageFile: null, is_active: product.is_active })}>{t.admin.edit}</button>
+                        <button className="button-surface border border-brand-200 bg-white text-stone-700" type="button" onClick={() => setProductForm({ id: product.id, category: product.category || '', name: product.name || '', description: product.description || '', price: product.price || '', sale_price: product.sale_price || '', imageFile: null, is_active: product.is_active })}>{t.admin.edit}</button>
                         <button className="button-surface border border-rose-200 bg-white text-rose-600" type="button" onClick={() => setDeleteTarget({ type: 'product', id: product.id })}>{t.admin.delete}</button>
                       </div>
                     </td>
