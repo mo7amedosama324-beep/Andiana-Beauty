@@ -1533,6 +1533,29 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
     is_active: true,
   })
 
+  const stats = [
+    {
+      label: isAr ? 'الطلبات' : 'Orders',
+      value: orders.length,
+      hint: isAr ? 'قيد المراجعة أو التنفيذ' : 'Waiting, processing, or completed',
+    },
+    {
+      label: isAr ? 'المنتجات' : 'Products',
+      value: products.length,
+      hint: isAr ? 'كل المنتجات المسجلة' : 'All catalog items',
+    },
+    {
+      label: isAr ? 'الأقسام' : 'Categories',
+      value: categories.length,
+      hint: isAr ? 'تنظيم المتجر' : 'Store structure',
+    },
+    {
+      label: isAr ? 'المستخدمون' : 'Users',
+      value: users.length,
+      hint: isAr ? 'حسابات العملاء والأدمن' : 'Customers and staff',
+    },
+  ]
+
   // Helper function for authenticated fetch with Bearer token
   const authFetch = async (url, options = {}) => {
     const token = localStorage.getItem('access_token')
@@ -1713,71 +1736,108 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
 
   return (
     <div
-      className={`min-h-screen bg-sand-50 text-stone-900 ${isAr ? 'font-ar' : 'font-en'}`}
+      className={`min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.9),_rgba(247,237,229,0.95)_45%,_#f8f1ea_100%)] text-stone-900 ${isAr ? 'font-ar' : 'font-en'}`}
       dir={isAr ? 'rtl' : 'ltr'}
     >
-      <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 pb-16 pt-10">
-        <header className="glass-surface sticky top-4 z-20 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-500/10 px-5 py-3 shadow-soft">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-400">
+      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 pb-16 pt-6 sm:px-6 lg:px-8 lg:pt-8">
+        <header className="glass-surface sticky top-4 z-20 flex flex-wrap items-center justify-between gap-4 rounded-[1.75rem] border border-brand-500/10 bg-white/75 px-5 py-4 shadow-soft backdrop-blur-xl">
+          <div className="space-y-1">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-stone-400">
               {isAr ? 'لوحة التحكم' : 'Admin panel'}
             </p>
-            <h2 className="font-display text-2xl text-stone-900">{t.nav.admin}</h2>
+            <h2 className="font-display text-2xl text-stone-900 sm:text-3xl">{t.nav.admin}</h2>
+            <p className="max-w-xl text-sm leading-6 text-stone-500">
+              {isAr
+                ? 'إدارة الطلبات والمنتجات والأقسام والمستخدمين من مكان واحد، مع واجهة أوضح وأسرع في المسح البصري.'
+                : 'Manage orders, products, categories, and users from one place with a clearer, faster-scanning interface.'}
+            </p>
           </div>
           <Link
-            className="rounded-full border border-brand-500/20 bg-white px-4 py-2 text-xs font-semibold text-stone-600 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
+            className="rounded-full border border-brand-500/20 bg-white px-4 py-2 text-xs font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-500/35 hover:shadow-glow"
             to="/"
           >
             {isAr ? 'العودة للمتجر' : 'Back to store'}
           </Link>
         </header>
 
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {stats.map((stat) => (
+            <div
+              className="rounded-[1.5rem] border border-brand-500/10 bg-white/80 p-4 shadow-soft backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-white"
+              key={stat.label}
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-stone-400">
+                {stat.label}
+              </p>
+              <div className="mt-2 flex items-end justify-between gap-4">
+                <p className="font-display text-3xl text-stone-900">{stat.value}</p>
+                <span className="rounded-full bg-stone-900/5 px-3 py-1 text-[11px] font-semibold text-stone-500">
+                  {stat.hint}
+                </span>
+              </div>
+            </div>
+          ))}
+        </section>
+
         {error ? (
-          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          <p className="rounded-[1.25rem] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 shadow-sm">
             {error}
           </p>
         ) : null}
 
         {loading ? (
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="h-56 rounded-3xl bg-white/70 shadow-soft" />
-            <div className="h-56 rounded-3xl bg-white/70 shadow-soft" />
+            <div className="h-56 rounded-[1.75rem] bg-white/70 shadow-soft ring-1 ring-brand-500/5" />
+            <div className="h-56 rounded-[1.75rem] bg-white/70 shadow-soft ring-1 ring-brand-500/5" />
           </div>
         ) : (
           <>
-            <section className="space-y-4 rounded-3xl border border-brand-500/10 bg-white/80 p-6 shadow-soft">
-              <h3 className="font-display text-xl text-stone-900">
-                {isAr ? 'الطلبات' : 'Orders'}
-              </h3>
-              <p className="text-xs text-stone-500">
-                {isAr ? 'طلبات العملاء (ضيف أو مسجّل).' : 'Customer orders from checkout.'}
-              </p>
+            <section className="space-y-4 rounded-[1.75rem] border border-brand-500/10 bg-white/82 p-6 shadow-soft backdrop-blur-sm">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <h3 className="font-display text-xl text-stone-900 sm:text-2xl">
+                    {isAr ? 'الطلبات' : 'Orders'}
+                  </h3>
+                  <p className="text-xs text-stone-500">
+                    {isAr ? 'طلبات العملاء (ضيف أو مسجّل).' : 'Customer orders from checkout.'}
+                  </p>
+                </div>
+                <span className="rounded-full border border-brand-500/20 bg-brand-500/5 px-3 py-1 text-[11px] font-semibold text-stone-500">
+                  {orders.length} {isAr ? 'طلب' : 'items'}
+                </span>
+              </div>
               {!orders.length ? (
-                <p className="text-sm text-stone-500">{isAr ? 'لا طلبات بعد.' : 'No orders yet.'}</p>
+                <p className="rounded-2xl border border-dashed border-brand-500/15 bg-sand-50 px-4 py-5 text-sm text-stone-500">
+                  {isAr ? 'لا طلبات بعد.' : 'No orders yet.'}
+                </p>
               ) : (
-                <div className="grid max-h-[420px] gap-3 overflow-y-auto pr-1">
+                <div className="grid max-h-[440px] gap-3 overflow-y-auto pr-1">
                   {orders.map((order) => (
                     <div
-                      className="rounded-2xl border border-brand-500/10 bg-white px-4 py-3 text-sm"
+                      className="rounded-[1.35rem] border border-brand-500/10 bg-white px-4 py-4 text-sm shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
                       key={order.id}
                     >
-                      <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                          <p className="font-semibold text-stone-900">
+                          <p className="font-semibold text-stone-900 sm:text-[15px]">
                             #{order.id} · {order.customer_name}
                           </p>
                           <p className="text-xs text-stone-500">{order.customer_phone}</p>
-                          <p className="mt-1 text-xs text-stone-600">{order.customer_address}</p>
+                          <p className="mt-1 max-w-2xl text-xs leading-6 text-stone-600">{order.customer_address}</p>
                         </div>
                         <div className="text-end text-xs text-stone-500">
                           <p className="font-semibold text-stone-900">
                             {formatPrice(order.total, isAr)}
                           </p>
-                          <p>{order.status}</p>
-                          <p>{new Date(order.created_at).toLocaleString(isAr ? 'ar-EG' : 'en-EG')}</p>
+                          <p className="mt-1 inline-flex rounded-full bg-stone-900/5 px-2.5 py-1 text-[11px] font-semibold text-stone-600">
+                            {order.status}
+                          </p>
+                          <p className="mt-2 text-[11px] text-stone-400">
+                            {new Date(order.created_at).toLocaleString(isAr ? 'ar-EG' : 'en-EG')}
+                          </p>
                         </div>
                       </div>
-                      <ul className="mt-2 space-y-1 border-t border-brand-500/10 pt-2 text-xs text-stone-600">
+                      <ul className="mt-3 space-y-1 border-t border-brand-500/10 pt-3 text-xs text-stone-600">
                         {(order.items || []).map((item) => (
                           <li key={item.id}>
                             {item.product_name} × {item.quantity} — {formatPrice(item.unit_price, isAr)}
@@ -1790,11 +1850,11 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
               )}
             </section>
 
-            <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-              <section className="space-y-4 rounded-3xl border border-brand-500/10 bg-white/80 p-6 shadow-soft">
+            <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+              <section className="space-y-4 rounded-[1.75rem] border border-brand-500/10 bg-white/82 p-6 shadow-soft backdrop-blur-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h3 className="font-display text-xl text-stone-900">
+                    <h3 className="font-display text-xl text-stone-900 sm:text-2xl">
                       {isAr ? 'إدارة المنتجات' : 'Manage products'}
                     </h3>
                     <p className="text-xs text-stone-500">
@@ -1802,7 +1862,7 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                     </p>
                   </div>
                   <button
-                    className="rounded-full border border-brand-500/20 px-4 py-2 text-xs font-semibold text-stone-600"
+                    className="rounded-full border border-brand-500/20 bg-white px-4 py-2 text-xs font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-500/35 hover:shadow-glow"
                     type="button"
                     onClick={resetProductForm}
                   >
@@ -1810,10 +1870,10 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                   </button>
                 </div>
 
-                <form className="grid gap-3" onSubmit={handleProductSubmit}>
+                <form className="grid gap-3 rounded-[1.4rem] border border-brand-500/10 bg-sand-50/70 p-4" onSubmit={handleProductSubmit}>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <input
-                      className="rounded-2xl border border-brand-500/10 bg-white px-4 py-2 text-sm outline-none focus:border-brand-500/40"
+                      className="rounded-2xl border border-brand-500/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500/40 focus:ring-4 focus:ring-brand-500/10"
                       placeholder={isAr ? 'اسم المنتج' : 'Product name'}
                       value={productForm.name}
                       onChange={(e) =>
@@ -1822,7 +1882,7 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                       required
                     />
                     <input
-                      className="rounded-2xl border border-brand-500/10 bg-white px-4 py-2 text-sm outline-none focus:border-brand-500/40"
+                      className="rounded-2xl border border-brand-500/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500/40 focus:ring-4 focus:ring-brand-500/10"
                       placeholder={isAr ? 'رابط الصورة' : 'Image URL'}
                       value={productForm.image_url}
                       onChange={(e) =>
@@ -1831,7 +1891,7 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                     />
                   </div>
                   <select
-                    className="rounded-2xl border border-brand-500/10 bg-white px-4 py-2 text-sm outline-none focus:border-brand-500/40"
+                    className="rounded-2xl border border-brand-500/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500/40 focus:ring-4 focus:ring-brand-500/10"
                     value={productForm.category}
                     onChange={(e) =>
                       setProductForm((prev) => ({ ...prev, category: e.target.value }))
@@ -1844,7 +1904,7 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                       </option>
                     ))}
                   </select>
-                  <label className="flex items-center justify-between gap-3 rounded-2xl border border-brand-500/10 bg-white px-4 py-2 text-xs text-stone-600">
+                  <label className="flex items-center justify-between gap-3 rounded-2xl border border-brand-500/10 bg-white px-4 py-3 text-xs text-stone-600">
                     <span>{isAr ? 'ارفع صورة المنتج' : 'Upload product image'}</span>
                     <input
                       type="file"
@@ -1858,7 +1918,7 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                     />
                   </label>
                   <textarea
-                    className="min-h-[90px] rounded-2xl border border-brand-500/10 bg-white px-4 py-2 text-sm outline-none focus:border-brand-500/40"
+                    className="min-h-[110px] rounded-2xl border border-brand-500/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500/40 focus:ring-4 focus:ring-brand-500/10"
                     placeholder={isAr ? 'وصف المنتج' : 'Product description'}
                     value={productForm.description}
                     onChange={(e) =>
@@ -1867,7 +1927,7 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                   />
                   <div className="grid gap-3 sm:grid-cols-3">
                     <input
-                      className="rounded-2xl border border-brand-500/10 bg-white px-4 py-2 text-sm outline-none focus:border-brand-500/40"
+                      className="rounded-2xl border border-brand-500/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500/40 focus:ring-4 focus:ring-brand-500/10"
                       placeholder={isAr ? 'السعر' : 'Price'}
                       type="number"
                       step="0.01"
@@ -1878,7 +1938,7 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                       required
                     />
                     <input
-                      className="rounded-2xl border border-brand-500/10 bg-white px-4 py-2 text-sm outline-none focus:border-brand-500/40"
+                      className="rounded-2xl border border-brand-500/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500/40 focus:ring-4 focus:ring-brand-500/10"
                       placeholder={isAr ? 'سعر التخفيض' : 'Sale price'}
                       type="number"
                       step="0.01"
@@ -1887,7 +1947,7 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                         setProductForm((prev) => ({ ...prev, sale_price: e.target.value }))
                       }
                     />
-                    <label className="flex items-center gap-2 rounded-2xl border border-brand-500/10 bg-white px-4 py-2 text-xs text-stone-600">
+                    <label className="flex items-center gap-2 rounded-2xl border border-brand-500/10 bg-white px-4 py-3 text-xs text-stone-600">
                       <input
                         type="checkbox"
                         checked={productForm.is_active}
@@ -1902,7 +1962,7 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                     </label>
                   </div>
                   <button
-                    className="w-fit rounded-full bg-stone-900 px-5 py-2 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
+                    className="w-fit rounded-full bg-stone-900 px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
                     type="submit"
                   >
                     {productForm.id
@@ -1918,7 +1978,7 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                 <div className="grid gap-3">
                   {products.map((product) => (
                     <div
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-500/10 bg-white px-4 py-3"
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-[1.25rem] border border-brand-500/10 bg-white px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
                       key={product.id}
                     >
                       <div>
@@ -1937,14 +1997,14 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                       </div>
                       <div className="flex items-center gap-2">
                         <button
-                          className="rounded-full border border-brand-500/20 px-3 py-1 text-[11px] font-semibold text-stone-600"
+                          className="rounded-full border border-brand-500/20 bg-white px-3 py-1.5 text-[11px] font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-500/35 hover:shadow-glow"
                           type="button"
                           onClick={() => handleProductEdit(product)}
                         >
                           {isAr ? 'تعديل' : 'Edit'}
                         </button>
                         <button
-                          className="rounded-full border border-red-200 px-3 py-1 text-[11px] font-semibold text-red-500"
+                          className="rounded-full border border-red-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-red-500 shadow-sm transition hover:-translate-y-0.5 hover:border-red-300 hover:shadow-glow"
                           type="button"
                           onClick={() => handleProductDelete(product.id)}
                         >
@@ -1957,10 +2017,10 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
               </section>
 
               <div className="space-y-6">
-                <section className="space-y-4 rounded-3xl border border-brand-500/10 bg-white/80 p-6 shadow-soft">
+                <section className="space-y-4 rounded-[1.75rem] border border-brand-500/10 bg-white/82 p-6 shadow-soft backdrop-blur-sm">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h3 className="font-display text-xl text-stone-900">
+                      <h3 className="font-display text-xl text-stone-900 sm:text-2xl">
                         {isAr ? 'إدارة الأقسام' : 'Manage categories'}
                       </h3>
                       <p className="text-xs text-stone-500">
@@ -1968,7 +2028,7 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                       </p>
                     </div>
                     <button
-                      className="rounded-full border border-brand-500/20 px-4 py-2 text-xs font-semibold text-stone-600"
+                      className="rounded-full border border-brand-500/20 bg-white px-4 py-2 text-xs font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-500/35 hover:shadow-glow"
                       type="button"
                       onClick={resetCategoryForm}
                     >
@@ -1976,9 +2036,9 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                     </button>
                   </div>
 
-                  <form className="grid gap-3" onSubmit={handleCategorySubmit}>
+                  <form className="grid gap-3 rounded-[1.4rem] border border-brand-500/10 bg-sand-50/70 p-4" onSubmit={handleCategorySubmit}>
                     <input
-                      className="rounded-2xl border border-brand-500/10 bg-white px-4 py-2 text-sm outline-none focus:border-brand-500/40"
+                      className="rounded-2xl border border-brand-500/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500/40 focus:ring-4 focus:ring-brand-500/10"
                       placeholder={isAr ? 'اسم القسم' : 'Category name'}
                       value={categoryForm.name}
                       onChange={(e) =>
@@ -1987,7 +2047,7 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                       required
                     />
                     <button
-                      className="w-fit rounded-full bg-stone-900 px-5 py-2 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
+                      className="w-fit rounded-full bg-stone-900 px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
                       type="submit"
                     >
                       {categoryForm.id
@@ -2003,20 +2063,20 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                   <div className="grid gap-3">
                     {categories.map((category) => (
                       <div
-                        className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-500/10 bg-white px-4 py-3"
+                        className="flex flex-wrap items-center justify-between gap-3 rounded-[1.25rem] border border-brand-500/10 bg-white px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
                         key={category.id}
                       >
                         <p className="text-sm font-semibold text-stone-900">{category.name}</p>
                         <div className="flex items-center gap-2">
                           <button
-                            className="rounded-full border border-brand-500/20 px-3 py-1 text-[11px] font-semibold text-stone-600"
+                            className="rounded-full border border-brand-500/20 bg-white px-3 py-1.5 text-[11px] font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-500/35 hover:shadow-glow"
                             type="button"
                             onClick={() => handleCategoryEdit(category)}
                           >
                             {isAr ? 'تعديل' : 'Edit'}
                           </button>
                           <button
-                            className="rounded-full border border-red-200 px-3 py-1 text-[11px] font-semibold text-red-500"
+                            className="rounded-full border border-red-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-red-500 shadow-sm transition hover:-translate-y-0.5 hover:border-red-300 hover:shadow-glow"
                             type="button"
                             onClick={() => handleCategoryDelete(category.id)}
                           >
@@ -2028,9 +2088,9 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                   </div>
                 </section>
 
-                <section className="space-y-4 rounded-3xl border border-brand-500/10 bg-white/80 p-6 shadow-soft">
+                <section className="space-y-4 rounded-[1.75rem] border border-brand-500/10 bg-white/82 p-6 shadow-soft backdrop-blur-sm">
                   <div>
-                    <h3 className="font-display text-xl text-stone-900">
+                    <h3 className="font-display text-xl text-stone-900 sm:text-2xl">
                       {isAr ? 'إدارة المستخدمين' : 'Manage users'}
                     </h3>
                     <p className="text-xs text-stone-500">
@@ -2040,7 +2100,7 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                   <div className="grid gap-3">
                     {users.map((user) => (
                       <div
-                        className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-500/10 bg-white px-4 py-3"
+                        className="flex flex-wrap items-center justify-between gap-3 rounded-[1.25rem] border border-brand-500/10 bg-white px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-glow"
                         key={user.id}
                       >
                         <div>
@@ -2056,7 +2116,7 @@ function AdminDashboard({ isAr, t, apiBase, nudePalette, onTogglePalette }) {
                           </p>
                         </div>
                         <button
-                          className="rounded-full border border-brand-500/20 px-3 py-1 text-[11px] font-semibold text-stone-600"
+                          className="rounded-full border border-brand-500/20 bg-white px-3 py-1.5 text-[11px] font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-500/35 hover:shadow-glow"
                           type="button"
                           onClick={() => handleToggleAdmin(user)}
                         >
