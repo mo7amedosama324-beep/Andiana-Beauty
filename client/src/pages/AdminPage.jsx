@@ -168,6 +168,28 @@ export default function AdminPage() {
     }
   }
 
+  const deleteOrder = async (orderId) => {
+    // رسالة تأكيد عشان متمسحش بالغلط
+    if (!window.confirm(isAr ? "هل أنت متأكد من مسح هذا الأوردر؟" : "Are you sure you want to delete this order?")) return;
+
+    try {
+      const response = await authFetch(`${apiBase}/orders/${orderId}/`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        pushToast({ type: 'success', message: isAr ? 'تم حذف الأوردر بنجاح' : 'Order deleted successfully' })
+        refreshAdminData()
+      } else {
+        setError(isAr ? 'فشل الحذف، تأكد من صلاحيات الإدمن' : 'Delete failed, check admin permissions')
+      }
+    } catch (error) {
+      console.error("Error deleting order:", error)
+      setError(isAr ? 'حدث خطأ أثناء حذف الأوردر' : 'Error deleting order')
+    }
+  }
+
   return (
     <PageShell isAr={isAr} setLang={setLang} t={t} authUser={authUser} onLogout={handleLogout} cartCount={cartItemCount} nudePalette={nudePalette} onTogglePalette={togglePalette}>
       <header className="card-surface p-6">
@@ -198,7 +220,7 @@ export default function AdminPage() {
           <table className="min-w-full border-collapse text-sm">
             <thead className="bg-sand-50 text-left text-xs uppercase tracking-[0.2em] text-stone-500">
               <tr>
-                <th className="px-4 py-3">#</th><th className="px-4 py-3">Customer</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Total</th><th className="px-4 py-3">Date</th>
+                <th className="px-4 py-3">#</th><th className="px-4 py-3">Customer</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Total</th><th className="px-4 py-3">Date</th><th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -209,6 +231,9 @@ export default function AdminPage() {
                   <td className="px-4 py-3 text-stone-600">{order.status}</td>
                   <td className="px-4 py-3 font-semibold text-stone-900">{formatPrice(order.total, isAr)}</td>
                   <td className="px-4 py-3 text-stone-500">{new Date(order.created_at).toLocaleString(isAr ? 'ar-EG' : 'en-EG')}</td>
+                  <td className="px-4 py-3">
+                    <button className="button-surface border border-rose-200 bg-white text-rose-600" type="button" onClick={() => deleteOrder(order.id)}>{t.admin.delete}</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
