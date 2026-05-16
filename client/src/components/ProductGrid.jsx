@@ -149,11 +149,11 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
       {/* تفاصيل المنتج */}
       <div className="mt-4 flex flex-col flex-grow space-y-2.5">
         <div>
-          <h3 className="line-clamp-1 text-sm font-bold text-stone-950 dark:text-stone-50">
+          <h3 className="line-clamp-1 text-sm font-bold text-sky-700 dark:text-sky-300">
             {product.name}
           </h3>
           {product.category_name && (
-            <p className="text-[10px] uppercase tracking-wider text-stone-500 dark:text-stone-400">
+            <p className="text-[10px] uppercase tracking-wider text-rose-600 dark:text-rose-400">
               {product.category_name}
             </p>
           )}
@@ -184,15 +184,15 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
           <div className="flex flex-col items-start gap-0.5">
             {product.sale_price ? (
               <>
-                <span className="text-base font-black text-stone-950 dark:text-stone-50">
+                <span className="text-base font-black text-sky-700 dark:text-sky-300">
                   {formatPrice(product.sale_price, isAr)}
                 </span>
-                <span className="text-xs text-stone-500 line-through dark:text-stone-400">
+                <span className="text-xs text-rose-500 line-through dark:text-rose-400">
                   {formatPrice(product.price, isAr)}
                 </span>
               </>
             ) : (
-              <span className="text-base font-black text-stone-950 dark:text-stone-50">
+              <span className="text-base font-black text-sky-700 dark:text-sky-300">
                 {formatPrice(product.price, isAr)}
               </span>
             )}
