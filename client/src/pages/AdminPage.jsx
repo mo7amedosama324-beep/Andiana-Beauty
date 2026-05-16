@@ -21,6 +21,7 @@ export default function AdminPage() {
   // State للألوان والصور الإضافية
   const [productColors, setProductColors] = useState([]) // [{name: '', code: '#000000'}]
   const [additionalImages, setAdditionalImages] = useState([]) // Array of Files
+  const [additionalImageUrls, setAdditionalImageUrls] = useState([]) // Existing image URLs
 
   const [deleteTarget, setDeleteTarget] = useState(null)
 
@@ -69,6 +70,7 @@ export default function AdminPage() {
     setProductForm({ id: null, category: '', name: '', description: '', price: '', sale_price: '', imageFile: null, is_active: true })
     setProductColors([])
     setAdditionalImages([])
+    setAdditionalImageUrls([])
   }
   
   const resetCategoryForm = () => setCategoryForm({ id: null, name: '' })
@@ -86,29 +88,30 @@ export default function AdminPage() {
     event.preventDefault()
     setError('')
     try {
-      const payload = new FormData()
-      payload.append('category', productForm.category || '')
-      payload.append('name', productForm.name)
-      payload.append('description', productForm.description)
-      payload.append('price', productForm.price)
-      if (productForm.sale_price) payload.append('sale_price', productForm.sale_price)
-      payload.append('is_active', productForm.is_active ? 'true' : 'false')
-      
-      // الصورة الأساسية
-      if (productForm.imageFile) payload.append('image', productForm.imageFile)
+      const formData = new FormData()
+      formData.append('category', productForm.category || '')
+      formData.append('name', productForm.name)
+      formData.append('description', productForm.description)
+      formData.append('price', productForm.price)
+      if (productForm.sale_price) formData.append('sale_price', productForm.sale_price)
+      formData.append('is_active', productForm.is_active ? 'true' : 'false')
 
-      // إرسال الصور الإضافية (لازم الباك إيند يكون مستني الاسم ده)
+      if (productForm.imageFile) formData.append('image', productForm.imageFile)
+
       additionalImages.forEach((file) => {
-        payload.append('uploaded_images', file)
+        formData.append('additional_images', file)
       })
 
-      // إرسال الألوان كـ JSON string
-      payload.append('colors_data', JSON.stringify(productColors))
+      if (additionalImageUrls.length > 0) {
+        formData.append('additional_images_data', JSON.stringify(additionalImageUrls))
+      }
+
+      formData.append('colors_data', JSON.stringify(productColors))
 
       const target = productForm.id ? `${apiBase}/products/${productForm.id}/` : `${apiBase}/products/`
       const method = productForm.id ? 'PATCH' : 'POST'
       
-      const response = await authFetch(target, { method, body: payload })
+      const response = await authFetch(target, { method, body: formData })
       if (!response.ok) throw new Error('save')
       
       pushToast({ type: 'success', message: isAr ? 'تم حفظ المنتج بنجاح.' : 'Product saved successfully.' })
@@ -293,7 +296,32 @@ export default function AdminPage() {
                     <td className="px-4 py-3 font-semibold text-stone-900">{formatPrice(product.sale_price || product.price, isAr)}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2">
-                        <button className="button-surface border border-brand-200 bg-white text-stone-700" type="button" onClick={() => setProductForm({ id: product.id, category: product.category || '', name: product.name || '', description: product.description || '', price: product.price || '', sale_price: product.sale_price || '', imageFile: null, is_active: product.is_active })}>{t.admin.edit}</button>
+                        <button
+                          className="button-surface border border-brand-200 bg-white text-stone-700"
+                          type="button"
+                          onClick={() => {
+                            setProductForm({
+                              id: product.id,
+                              category: product.category || '',
+                              name: product.name || '',
+                              description: product.description || '',
+                              price: product.price || '',
+                              sale_price: product.sale_price || '',
+                              imageFile: null,
+                              is_active: product.is_active,
+                            })
+                            setProductColors(Array.isArray(product.colors) ? product.colors.map((color) => ({
+                              color_name: color.color_name || '',
+                              color_code: color.color_code || '#000000',
+                            })) : [])
+                            setAdditionalImageUrls(Array.isArray(product.additional_images) ? product.additional_images
+                              .map((image) => image?.image || image?.image_url || image)
+                              .filter(Boolean) : [])
+                            setAdditionalImages([])
+                          }}
+                        >
+                          {t.admin.edit}
+                        </button>
                         <button className="button-surface border border-rose-200 bg-white text-rose-600" type="button" onClick={() => setDeleteTarget({ type: 'product', id: product.id })}>{t.admin.delete}</button>
                       </div>
                     </td>
