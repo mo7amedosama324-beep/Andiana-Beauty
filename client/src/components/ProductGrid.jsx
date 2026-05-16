@@ -126,14 +126,14 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
         {/* دوائر الألوان - هتظهر بس لو المنتج ليه ألوان */}
         {product.colors && product.colors.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-1 pb-1">
-            {product.colors.map((color) => (
+            {product.colors.map((color, index) => (
               <button
-                key={color.id || color.color_name}
+                key={index}
                 type="button"
                 title={color.color_name}
-                onClick={() => setSelectedColor(color.id || color.color_name)}
+                onClick={() => setSelectedColor(index)}
                 className={`h-7 w-7 rounded-full border-2 transition-all shadow-sm hover:scale-110 ${
-                  selectedColor === (color.id || color.color_name) ? 'border-stone-900 scale-110 ring-2 ring-stone-200' : 'border-stone-200'
+                  selectedColor === index ? 'border-stone-900 scale-110 ring-2 ring-stone-200' : 'border-stone-200'
                 }`}
                 style={{ backgroundColor: color.color_code }}
               />
