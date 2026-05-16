@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from 'react'
-import { formatPrice } from '../lib/formatters' // شيلنا resolveImage لأن رابط الكلاوديناري بيجي جاهز
+import { formatPrice } from '../lib/formatters'
 
 const ProductGrid = memo(function ProductGrid({ products, isAr, apiOrigin, addLabel, onAddToCart, cartBusy }) {
   return (
@@ -21,14 +21,9 @@ const ProductGrid = memo(function ProductGrid({ products, isAr, apiOrigin, addLa
 
 function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
   const [hasImageError, setHasImageError] = useState(false)
-  
-  // State 1: عشان الصورة اللي معروضة تتغير لما ندوس على الصور الصغيرة
   const [mainImage, setMainImage] = useState(product.image)
-  
-  // State 2: عشان نحفظ اللون اللي اليوزر اختاره
   const [selectedColor, setSelectedColor] = useState(null)
   
-  // حساب نسبة الخصم
   const discountPercentage = useMemo(() => {
     if (product.sale_price && product.price) {
       const discount = ((parseFloat(product.price) - parseFloat(product.sale_price)) / parseFloat(product.price)) * 100
@@ -38,102 +33,96 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
   }, [product.price, product.sale_price])
 
   return (
-    <article className="group card-surface overflow-hidden p-4 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-elevated">
+    <article className="group card-surface relative flex flex-col overflow-hidden p-3 transition-all duration-300 hover:-translate-y-1 dark:bg-zinc-900/40 dark:border-zinc-800">
       
       {/* الصورة الأساسية */}
-      <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gradient-to-br from-rose-100/50 via-amber-50/50 to-white">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800">
         {!hasImageError && mainImage ? (
           <img
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
             src={mainImage}
             alt={product.name}
             loading="lazy"
             onError={() => setHasImageError(true)}
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-rose-100/60 via-amber-50/60 to-white" />
-        )}
-
-        {/* شارة Sale */}
-        {discountPercentage > 0 && (
-          <div className="absolute left-3 top-3 z-10 rounded-full bg-rose-500 px-3 py-1 text-xs font-bold text-white shadow-lg">
-            {discountPercentage}% OFF
+          <div className="flex h-full w-full items-center justify-center bg-zinc-200 dark:bg-zinc-800 text-zinc-400">
+            No Image
           </div>
         )}
 
-        {/* Overlay عند Hover مع أزرار سريعة */}
-        <div className="absolute inset-0 flex items-center justify-center gap-3 bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+        {/* شارة الخصم */}
+        {discountPercentage > 0 && (
+          <div className="absolute left-2 top-2 z-10 rounded-full bg-rose-600 px-2 py-1 text-[10px] font-bold text-white shadow-lg">
+            -{discountPercentage}%
+          </div>
+        )}
+
+        {/* Quick Actions Overlay */}
+        <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100 backdrop-blur-[2px]">
           <button
-            type="button"
-            disabled={cartBusy || !onAddToCart}
             onClick={() => onAddToCart?.(product.id, selectedColor)}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-stone-900 shadow-lg transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:opacity-60"
-            title={isAr ? 'إضافة للسلة' : 'Add to cart'}
+            disabled={cartBusy}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-zinc-900 shadow-xl transition-transform hover:scale-110 active:scale-90 disabled:opacity-50"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-stone-900 shadow-lg transition-transform hover:scale-110"
-            title={isAr ? 'معاينة' : 'Quick view'}
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
           </button>
         </div>
       </div>
 
-      {/* معرض الصور الصغير (Gallery) - هيظهر بس لو فيه صور إضافية */}
+      {/* معرض الصور الصغير (Gallery) */}
       {product.additional_images && product.additional_images.length > 0 && (
-        <div className="mt-2 flex gap-2 overflow-x-auto pb-1 custom-scrollbar">
-          {/* بنعرض الصورة الأساسية كأول صورة صغيرة عشان يقدر يرجعلها */}
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {/* الصورة الأساسية في المصغرات */}
           <button
-            type="button"
             onClick={() => setMainImage(product.image)}
-            className={`h-10 w-10 flex-shrink-0 overflow-hidden rounded-md border-2 transition-colors ${
-              mainImage === product.image ? 'border-stone-900' : 'border-transparent'
+            className={`h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
+              mainImage === product.image ? 'border-brand-500 ring-2 ring-brand-200' : 'border-transparent opacity-70 hover:opacity-100'
             }`}
           >
-            <img src={product.image} alt="main thumbnail" className="h-full w-full object-cover" />
+            <img src={product.image} className="h-full w-full object-cover" alt="thumb" />
           </button>
           
-          {/* بنلف على باقي الصور الإضافية */}
+          {/* الصور الإضافية */}
           {product.additional_images.map((imgObj) => (
             <button
               key={imgObj.id}
-              type="button"
               onClick={() => setMainImage(imgObj.image)}
-              className={`h-10 w-10 flex-shrink-0 overflow-hidden rounded-md border-2 transition-colors ${
-                mainImage === imgObj.image ? 'border-stone-900' : 'border-transparent'
+              className={`h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
+                mainImage === imgObj.image ? 'border-brand-500 ring-2 ring-brand-200' : 'border-transparent opacity-70 hover:opacity-100'
               }`}
             >
-              <img src={imgObj.image} alt="thumbnail" className="h-full w-full object-cover" />
+              <img src={imgObj.image} className="h-full w-full object-cover" alt="thumb" />
             </button>
           ))}
         </div>
       )}
 
-      <div className="mt-4 space-y-2">
+      {/* تفاصيل المنتج */}
+      <div className="mt-4 flex flex-col flex-grow space-y-2">
         <div>
-          <p className="text-sm font-semibold text-stone-900">{product.name}</p>
-          {product.category_name ? <p className="text-xs text-stone-500">{product.category_name}</p> : null}
+          <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 line-clamp-1">
+            {product.name}
+          </h3>
+          {product.category_name && (
+            <p className="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              {product.category_name}
+            </p>
+          )}
         </div>
 
-        {/* دوائر الألوان - هتظهر بس لو المنتج ليه ألوان */}
+        {/* اختيار الألوان */}
         {product.colors && product.colors.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-1 pb-1">
+          <div className="flex flex-wrap gap-1.5 py-1">
             {product.colors.map((color, index) => (
               <button
                 key={index}
-                type="button"
                 title={color.color_name}
                 onClick={() => setSelectedColor(index)}
-                className={`h-7 w-7 rounded-full border-2 transition-all shadow-sm hover:scale-110 ${
-                  selectedColor === index ? 'border-stone-900 scale-110 ring-2 ring-stone-200' : 'border-stone-200'
+                className={`h-5 w-5 rounded-full border transition-all ${
+                  selectedColor === index ? 'ring-2 ring-brand-400 ring-offset-2 dark:ring-offset-zinc-900 border-transparent' : 'border-zinc-200 dark:border-zinc-700'
                 }`}
                 style={{ backgroundColor: color.color_code }}
               />
@@ -141,25 +130,31 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
           </div>
         )}
 
+        {/* السعر */}
         <div className="flex items-center gap-2">
           {product.sale_price ? (
             <>
-              <span className="text-lg font-bold text-stone-900">{formatPrice(product.sale_price, isAr)}</span>
-              <span className="text-sm text-stone-400 line-through">{formatPrice(product.price, isAr)}</span>
+              <span className="text-base font-black text-brand-600 dark:text-brand-400">
+                {formatPrice(product.sale_price, isAr)}
+              </span>
+              <span className="text-xs text-zinc-400 line-through">
+                {formatPrice(product.price, isAr)}
+              </span>
             </>
           ) : (
-            <span className="text-lg font-bold text-stone-900">{formatPrice(product.price, isAr)}</span>
+            <span className="text-base font-black text-zinc-900 dark:text-zinc-100">
+              {formatPrice(product.price, isAr)}
+            </span>
           )}
         </div>
 
+        {/* زر الإضافة للسلة السفلي */}
         <button
-          type="button"
-          disabled={cartBusy || !onAddToCart}
-          // ممكن نبعت اللون اللي اختاره للسلة بعدين لو حبيت
+          disabled={cartBusy}
           onClick={() => onAddToCart?.(product.id, selectedColor)}
-          className="button-surface mt-2 w-full bg-stone-900 text-white disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-auto w-full rounded-xl bg-zinc-900 py-2.5 text-xs font-bold text-white transition-all hover:bg-zinc-800 active:scale-95 dark:bg-brand-500 dark:text-zinc-950 dark:hover:bg-brand-400 disabled:opacity-50"
         >
-          {addLabel}
+          {cartBusy ? '...' : addLabel}
         </button>
       </div>
     </article>
