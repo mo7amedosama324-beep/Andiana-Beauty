@@ -1,10 +1,9 @@
 import { memo, useMemo, useState } from 'react'
 import { formatPrice } from '../lib/formatters'
 
-// --- كومبوننت الـ Grid الأساسي ---
 const ProductGrid = memo(function ProductGrid({ products, isAr, apiOrigin, addLabel, onAddToCart, cartBusy }) {
   return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {products.map((product) => (
         <ProductCard
           key={product.id}
@@ -20,22 +19,36 @@ const ProductGrid = memo(function ProductGrid({ products, isAr, apiOrigin, addLa
   )
 })
 
-// --- كومبوننت كارت المنتج "الشيك" الجديد ---
 function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
   const [hasImageError, setHasImageError] = useState(false)
+  const [selectedColor, setSelectedColor] = useState(null)
   
-  // State للصورة المعروضة حالياً (الكبيرة)
-  const [currentImage, setCurrentImage] = useState(product.image)
-  
-  // تجميع كل الصور (الأساسية + الإضافية) في مصفوفة واحدة للـ Gallery
-  const allProductImages = useMemo(() => {
-    const images = [product.image];
+  // --- منطق تقليب الصور الجديد ---
+  // تجميع كل الصور المتاحة (الأساسية والإضافية) في مصفوفة واحدة
+  const allImages = useMemo(() => {
+    const productImages = [product.image];
     if (product.additional_images && product.additional_images.length > 0) {
-      product.additional_images.forEach(imgObj => images.push(imgObj.image));
+      product.additional_images.forEach(img => productImages.push(img.image));
     }
-    // بناخد أول 4 صور بس عشان الشكل يفضل متناسق
-    return images.slice(0, 4);
+    return productImages;
   }, [product.image, product.additional_images]);
+
+  // State لحفظ مؤشر (Index) الصورة المعروضة حالياً
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const currentImage = allImages[currentImageIndex];
+
+  // دالة للانتقال للصورة التالية
+  const showNextImage = (e) => {
+    e.stopPropagation(); // منع الكليك من الانتقال للكارت نفسه (لو كان عليه لينك)
+    setCurrentImageIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
+  };
+
+  // دالة للانتقال للصورة السابقة
+  const showPrevImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
+  };
+  // -----------------------------
 
   // حساب نسبة الخصم
   const discountPercentage = useMemo(() => {
@@ -47,65 +60,84 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
   }, [product.price, product.sale_price])
 
   return (
-    <article className="group card-surface flex flex-col overflow-hidden p-3.5 transition-all duration-300 hover:-translate-y-1 dark:bg-zinc-950 dark:border-zinc-800">
+    <article className="group card-surface relative flex flex-col overflow-hidden p-3 transition-all duration-300 hover:-translate-y-1">
       
-      {/* --- منطقة الصورة (Image & Thumbnail Gallery) --- */}
+      {/* منطقة الصورة الأساسية - مع الأسهم الجديدة */}
       <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800">
-        
-        {/* الصورة الكبيرة المعروضة */}
         {!hasImageError && currentImage ? (
           <img
-            className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105"
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
             src={currentImage}
             alt={product.name}
             loading="lazy"
             onError={() => setHasImageError(true)}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-zinc-400">
-            <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+          <div className="flex h-full w-full items-center justify-center bg-zinc-200 dark:bg-zinc-800 text-zinc-400">
+            No Image
           </div>
         )}
 
-        {/* شارة Sale */}
+        {/* --- أسهم تقليب الصور (تظهر عند الهوفر) --- */}
+        {allImages.length > 1 && (
+          <div className="absolute inset-0 flex items-center justify-between px-2 opacity-0 transition-opacity group-hover:opacity-100 z-10 backdrop-blur-[1px]">
+            {/* سهم للخلف */}
+            <button
+              type="button"
+              onClick={showPrevImage}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/70 text-zinc-900 shadow-md backdrop-blur-sm transition-transform hover:scale-110 active:scale-95"
+              aria-label={isAr ? "الصورة السابقة" : "Previous Image"}
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            {/* سهم للأمام */}
+            <button
+              type="button"
+              onClick={showNextImage}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/70 text-zinc-900 shadow-md backdrop-blur-sm transition-transform hover:scale-110 active:scale-95"
+              aria-label={isAr ? "الصورة التالية" : "Next Image"}
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </button>
+          </div>
+        )}
+
+        {/* شارة Sale (أخدت لون دهبي شيك) */}
         {discountPercentage > 0 && (
-          <div className="absolute left-3 top-3 z-20 rounded-full bg-rose-600 px-2.5 py-1 text-[11px] font-black uppercase text-white shadow-lg">
-            {isAr ? 'خصم' : 'Sale'}
-          </div>
-        )}
-
-        {/* --- الـ Hover Gallery: صور مصغرة عمودية شيك تظهر عند الهوفر --- */}
-        {allProductImages.length > 1 && (
-          <div className="absolute right-2 top-0 bottom-0 z-20 flex flex-col justify-center gap-1.5 py-4 transition-opacity duration-300 group-hover:opacity-100 opacity-60">
-            {allProductImages.map((imgUrl, index) => (
-              <button
-                key={index}
-                type="button"
-                // السحر هنا: لما تمشي الماوس (OnMouseEnter)، الصورة الكبيرة بتتغير
-                onMouseEnter={() => setCurrentImage(imgUrl)}
-                className={`h-11 w-11 flex-shrink-0 overflow-hidden rounded-lg border-2 bg-white transition-all duration-150 active:scale-95 ${
-                  currentImage === imgUrl 
-                    ? 'border-brand-500 ring-2 ring-brand-200 shadow-elevated' 
-                    : 'border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 shadow-sm'
-                }`}
-              >
-                <img src={imgUrl} className="h-full w-full object-cover" alt={`thumbnail ${index + 1}`} />
-              </button>
-            ))}
+          <div className="absolute left-2 top-2 z-10 rounded-full bg-brand-500 px-2 py-1 text-[10px] font-bold text-zinc-950 shadow-lg">
+            -{discountPercentage}%
           </div>
         )}
       </div>
 
-      {/* --- منطقة تفاصيل المنتج (Price, Name, CTA) --- */}
-      <div className="mt-5 flex flex-col flex-grow space-y-3.5">
-        
-        {/* الاسم والقسم */}
+      {/* منطقة المصغرات (Thumbnails) - بتتنقل مع الأسهم */}
+      {allImages.length > 1 && (
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {allImages.map((imgUrl, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => setCurrentImageIndex(index)} // تغيير الصورة فوراً عند الكليك
+              className={`h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all duration-150 ${
+                currentImageIndex === index 
+                  ? 'border-brand-500 ring-2 ring-brand-200' 
+                  : 'border-transparent opacity-70 hover:opacity-100'
+              }`}
+            >
+              <img src={imgUrl} className="h-full w-full object-cover" alt={`thumb ${index + 1}`} />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* تفاصيل المنتج (الكلام بقى Zinc عشان الوضوح) */}
+      <div className="mt-4 flex flex-col flex-grow space-y-2.5">
         <div>
-          <h3 className="text-sm font-bold leading-tight text-zinc-950 dark:text-zinc-50 line-clamp-1 group-hover:text-brand-700 transition-colors">
+          <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 line-clamp-1">
             {product.name}
           </h3>
           {product.category_name && (
-            <p className="text-[11px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mt-1">
+            <p className="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               {product.category_name}
             </p>
           )}
@@ -115,23 +147,27 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
         {product.colors && product.colors.length > 0 && (
           <div className="flex flex-wrap gap-1.5 py-1">
             {product.colors.map((color, index) => (
-              <span
+              <button
                 key={index}
+                type="button"
                 title={color.color_name}
-                className="h-5 w-5 rounded-full border border-zinc-200 dark:border-zinc-700 shadow-inner"
+                onClick={() => setSelectedColor(index)}
+                className={`h-5 w-5 rounded-full border transition-all ${
+                  selectedColor === index ? 'ring-2 ring-brand-400 ring-offset-2 border-transparent' : 'border-zinc-200 dark:border-zinc-700'
+                }`}
                 style={{ backgroundColor: color.color_code }}
               />
             ))}
           </div>
         )}
 
-        {/* السعر و زر الإضافة (جنب بعض عشان نوفر مساحة) */}
+        {/* السعر و زر الإضافة للسلة (جنب بعض عشان نوفر مساحة) */}
         <div className="mt-auto flex items-center justify-between gap-3 pt-2">
           {/* منطقة السعر */}
           <div className="flex flex-col items-start gap-0.5">
             {product.sale_price ? (
               <>
-                <span className="text-base font-black text-brand-700 dark:text-brand-400">
+                <span className="text-base font-black text-brand-600 dark:text-brand-400">
                   {formatPrice(product.sale_price, isAr)}
                 </span>
                 <span className="text-xs text-zinc-400 line-through">
@@ -139,18 +175,18 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
                 </span>
               </>
             ) : (
-              <span className="text-base font-black text-zinc-950 dark:text-zinc-50">
+              <span className="text-base font-black text-zinc-900 dark:text-zinc-100">
                 {formatPrice(product.price, isAr)}
               </span>
             )}
           </div>
 
-          {/* زر الإضافة للسلة - شيك وصغير */}
+          {/* زر الإضافة للسلة - بقى أسود شيك في اللايت ودهبي في الدارك */}
           <button
             type="button"
             disabled={cartBusy || !onAddToCart}
-            onClick={() => onAddToCart?.(product.id)}
-            className="flex h-11 items-center justify-center rounded-xl bg-zinc-950 px-5 text-xs font-bold text-white shadow-elevated transition-all hover:bg-zinc-800 active:scale-95 dark:bg-brand-500 dark:text-zinc-950 dark:hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => onAddToCart?.(product.id, selectedColor)}
+            className="flex h-10 items-center justify-center rounded-xl bg-zinc-950 px-4 text-xs font-bold text-white shadow-elevated transition-all hover:bg-zinc-800 active:scale-95 dark:bg-brand-500 dark:text-zinc-950 dark:hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {cartBusy ? (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
