@@ -71,7 +71,7 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
           </div>
         )}
 
-        {/* أسهم تقليب الصور - تظهر دايماً على موبايل، عند hover على desktop */}
+        {/* أسهم تقليب الصور */}
         {allImages.length > 1 && (
           <div className="absolute inset-0 flex items-center justify-between px-2 z-10 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
             <button
@@ -106,9 +106,7 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(index); }}
                 className={`h-1.5 rounded-full transition-all duration-200 ${
-                  currentImageIndex === index
-                    ? 'w-4 bg-white'
-                    : 'w-1.5 bg-white/50'
+                  currentImageIndex === index ? 'w-4 bg-white' : 'w-1.5 bg-white/50'
                 }`}
               />
             ))}
@@ -151,11 +149,11 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
       {/* تفاصيل المنتج */}
       <div className="mt-4 flex flex-col flex-grow space-y-2.5">
         <div>
-          <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 line-clamp-1">
+          <h3 className="text-sm font-bold text-black dark:text-zinc-100 line-clamp-1">
             {product.name}
           </h3>
           {product.category_name && (
-            <p className="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            <p className="text-[10px] uppercase tracking-wider text-black dark:text-zinc-400">
               {product.category_name}
             </p>
           )}
@@ -189,12 +187,12 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
                 <span className="text-base font-black text-brand-600 dark:text-brand-400">
                   {formatPrice(product.sale_price, isAr)}
                 </span>
-                <span className="text-xs text-zinc-400 line-through">
+                <span className="text-xs text-black line-through">
                   {formatPrice(product.price, isAr)}
                 </span>
               </>
             ) : (
-              <span className="text-base font-black text-zinc-900 dark:text-zinc-100">
+              <span className="text-base font-black text-black dark:text-zinc-100">
                 {formatPrice(product.price, isAr)}
               </span>
             )}
