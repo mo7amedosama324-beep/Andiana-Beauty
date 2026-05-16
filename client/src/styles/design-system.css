@@ -153,3 +153,25 @@
 html.palette-nude .palette-overlay {
   opacity: 0.06;
 }
+
+html.palette-rose .palette-overlay {
+  opacity: 0.12;
+}
+
+html.palette-rose .palette-overlay {
+  opacity: 0.12;
+}
+
+html.palette-rose .palette-overlay {
+  opacity: 0.12;
+}
+/* Card Surface */
+.card-surface {
+  background: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+html.dark-mode .card-surface {
+  background: #18181b;
+}

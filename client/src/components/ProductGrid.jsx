@@ -202,7 +202,7 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
             type="button"
             disabled={cartBusy || !onAddToCart}
             onClick={() => onAddToCart?.(product.id, selectedColor)}
-            className="flex h-10 items-center justify-center rounded-xl bg-zinc-950 px-4 text-xs font-bold text-white shadow-elevated transition-all hover:bg-zinc-800 active:scale-95 dark:bg-brand-500 dark:text-zinc-950 dark:hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-10 items-center justify-center rounded-xl bg-zinc-950 px-4 text-xs font-bold text-white shadow-elevated transition-all hover:bg-zinc-800 active:scale-95 dark:bg-brand-500 dark:text-white dark:hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {cartBusy ? (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
