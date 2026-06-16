@@ -260,15 +260,21 @@ export function AppProvider({ children }) {
     }
   }, [apiBase, ensureCart])
 
-  const updateCartLineQuantity = useCallback(async (productId, quantity) => {
+  const updateCartLineQuantity = useCallback(async (productId, quantity, selectedColor = null) => {
     const id = localStorage.getItem(CART_STORAGE_KEY)
     if (!id) return
     setCartBusy(true)
     try {
+      // بنجهز الداتا (الكمية + اللون لو العميل اختاره)
+      const payload = { product: productId, quantity }
+      if (selectedColor) {
+        payload.selected_color = selectedColor
+      }
+
       const response = await fetch(`${apiBase}/carts/${id}/items/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product: productId, quantity }),
+        body: JSON.stringify(payload),
       })
       if (!response.ok) throw new Error('qty')
       setCart(await response.json())
@@ -277,7 +283,6 @@ export function AppProvider({ children }) {
       setCartBusy(false)
     }
   }, [apiBase])
-
   const removeCartLine = useCallback(async (itemId) => {
     const id = localStorage.getItem(CART_STORAGE_KEY)
     if (!id) return

@@ -84,20 +84,30 @@ export default function CartPage() {
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-stone-900">{line.product?.name}</p>
                       
-                      {/* --- السطر الجديد لعرض اللون المختار --- */}
-                      {line.selected_color && (
-                        <p className="text-xs font-bold text-stone-600 my-1">
-                          {isAr ? 'اللون:' : 'Color:'} {line.selected_color}
-                        </p>
+                      {/* --- القايمة الجديدة لاختيار اللون من جوه السلة --- */}
+                      {line.product?.colors && line.product.colors.length > 0 && (
+                        <div className="my-2">
+                          <select
+                            value={line.selected_color || ''}
+                            onChange={(e) => pid && updateCartLineQuantity(pid, line.quantity, e.target.value)}
+                            className="block w-full max-w-[120px] rounded-lg border border-stone-300 bg-white px-2 py-1 text-xs text-stone-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                          >
+                            <option value="" disabled>{isAr ? 'اختر اللون' : 'Select Color'}</option>
+                            {line.product.colors.map((c, idx) => (
+                              <option key={idx} value={c.color_name}>
+                                {c.color_name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       )}
-                      
+
                       <p className="text-xs text-stone-500">{formatPrice(line.unit_price, isAr)} × {line.quantity}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      {/* لاحظ: هنحتاج نعدل updateCartLineQuantity في الـ AppContext بعدين عشان تاخد اللون في الاعتبار */}
-                      <button className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-stone-700 transition-all duration-300 ease-out active:scale-95" type="button" disabled={cartBusy || line.quantity <= 1 || !pid} onClick={() => pid && updateCartLineQuantity(pid, line.quantity - 1)}>−</button>
+                      <button className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-stone-700 transition-all duration-300 ease-out active:scale-95" type="button" disabled={cartBusy || line.quantity <= 1 || !pid} onClick={() => pid && updateCartLineQuantity(pid, line.quantity - 1, line.selected_color)}>−</button>
                       <span className="min-w-[1.5rem] text-center text-sm font-semibold">{line.quantity}</span>
-                      <button className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-stone-700 transition-all duration-300 ease-out active:scale-95" type="button" disabled={cartBusy || !pid} onClick={() => pid && updateCartLineQuantity(pid, line.quantity + 1)}>+</button>
+                      <button className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-stone-700 transition-all duration-300 ease-out active:scale-95" type="button" disabled={cartBusy || !pid} onClick={() => pid && updateCartLineQuantity(pid, line.quantity + 1, line.selected_color)}>+</button>
                       <button className="text-xs font-semibold text-rose-600 underline-offset-4 hover:underline" type="button" disabled={cartBusy} onClick={() => removeCartLine(line.id)}>{t.cartPage.remove}</button>
                     </div>
                     <p className="text-sm font-semibold text-stone-900">{formatPrice(line.line_total, isAr)}</p>
