@@ -7,7 +7,6 @@ import { useApp } from '../context/AppContext'
 import { useToast } from '../context/ToastContext'
 
 export default function CartPage() {
-  // التعديل هنا: سحبنا products عشان نجيب منها الألوان
   const { isAr, setLang, t, apiOrigin, authUser, handleLogout, cart, refreshCart, updateCartLineQuantity, removeCartLine, checkout, cartBusy, cartItemCount, nudePalette, togglePalette, products } = useApp()
   const { pushToast } = useToast()
   const [form, setForm] = useState({ customer_name: '', customer_phone: '', customer_address: '' })
@@ -44,7 +43,7 @@ export default function CartPage() {
   // دالة تغيير اللون من جوه السلة
   const handleColorChange = async (line, newColor) => {
     if (!newColor || newColor === line.selected_color) return;
-    // الباك إند بيحتاج نمسح اللون القديم ونضيف الجديد
+    // بنمسح المنتج باللون القديم ونضيفه باللون الجديد بنفس الكمية
     await removeCartLine(line.id);
     await updateCartLineQuantity(line.product.id, line.quantity, newColor);
   };
@@ -85,7 +84,6 @@ export default function CartPage() {
               {lines.map((line) => {
                 const image = resolveImage(line.product?.image || line.product?.image_url, apiOrigin)
                 const pid = line.product?.id
-                // التعديل هنا: بنجيب المنتج كامل من الـ Context عشان نقدر نوصل لألوانه
                 const fullProduct = products.find(p => p.id === pid)
 
                 return (
@@ -96,32 +94,57 @@ export default function CartPage() {
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-stone-900">{line.product?.name}</p>
                       
-                      {/* قايمة الألوان هتظهر هنا لو المنتج ليه ألوان متسجلة */}
+                      {/* دوائر الألوان بدلاً من القائمة (Select) */}
                       {fullProduct?.colors && fullProduct.colors.length > 0 && (
-                        <div className="my-2">
-                          <select
-                            value={line.selected_color || ''}
-                            onChange={(e) => handleColorChange(line, e.target.value)}
-                            disabled={cartBusy}
-                            className="block w-full max-w-[120px] rounded-lg border border-stone-300 bg-white px-2 py-1 text-xs text-stone-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-50"
-                          >
-                            <option value="" disabled>{isAr ? 'اختر اللون' : 'Select Color'}</option>
-                            {fullProduct.colors.map((c, idx) => (
-                              <option key={idx} value={c.color_name}>
-                                {c.color_name}
-                              </option>
-                            ))}
-                          </select>
+                        <div className="my-2 flex flex-wrap gap-1.5">
+                          {fullProduct.colors.map((color, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              title={color.color_name}
+                              disabled={cartBusy}
+                              onClick={() => handleColorChange(line, color.color_name)}
+                              className={`h-6 w-6 rounded-full border transition-all ${
+                                line.selected_color === color.color_name
+                                  ? 'ring-2 ring-brand-500 ring-offset-2 border-transparent scale-110 shadow-md'
+                                  : 'border-zinc-300 dark:border-zinc-600 opacity-80 hover:opacity-100'
+                              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                              style={{ backgroundColor: color.color_code }}
+                            />
+                          ))}
                         </div>
                       )}
 
                       <p className="text-xs text-stone-500">{formatPrice(line.unit_price, isAr)} × {line.quantity}</p>
                     </div>
+                    
+                    {/* زراير الكمية */}
                     <div className="flex items-center gap-2">
-                      <button className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-stone-700 transition-all duration-300 ease-out active:scale-95 disabled:opacity-50" type="button" disabled={cartBusy || line.quantity <= 1 || !pid} onClick={() => pid && updateCartLineQuantity(pid, line.quantity - 1, line.selected_color || '')}>−</button>
+                      <button 
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-stone-700 transition-all duration-300 ease-out active:scale-95 disabled:opacity-50" 
+                        type="button" 
+                        disabled={cartBusy || line.quantity <= 1 || !pid} 
+                        onClick={() => pid && updateCartLineQuantity(pid, line.quantity - 1, line.selected_color || '')}
+                      >
+                        −
+                      </button>
                       <span className="min-w-[1.5rem] text-center text-sm font-semibold">{line.quantity}</span>
-                      <button className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-stone-700 transition-all duration-300 ease-out active:scale-95 disabled:opacity-50" type="button" disabled={cartBusy || !pid} onClick={() => pid && updateCartLineQuantity(pid, line.quantity + 1, line.selected_color || '')}>+</button>
-                      <button className="text-xs font-semibold text-rose-600 underline-offset-4 hover:underline disabled:opacity-50" type="button" disabled={cartBusy} onClick={() => removeCartLine(line.id)}>{t.cartPage.remove}</button>
+                      <button 
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-stone-700 transition-all duration-300 ease-out active:scale-95 disabled:opacity-50" 
+                        type="button" 
+                        disabled={cartBusy || !pid} 
+                        onClick={() => pid && updateCartLineQuantity(pid, line.quantity + 1, line.selected_color || '')}
+                      >
+                        +
+                      </button>
+                      <button 
+                        className="text-xs font-semibold text-rose-600 underline-offset-4 hover:underline disabled:opacity-50" 
+                        type="button" 
+                        disabled={cartBusy} 
+                        onClick={() => removeCartLine(line.id)}
+                      >
+                        {t.cartPage.remove}
+                      </button>
                     </div>
                     <p className="text-sm font-semibold text-stone-900">{formatPrice(line.line_total, isAr)}</p>
                   </article>
