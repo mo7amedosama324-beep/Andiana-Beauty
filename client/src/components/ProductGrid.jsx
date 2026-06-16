@@ -21,7 +21,6 @@ const ProductGrid = memo(function ProductGrid({ products, isAr, apiOrigin, addLa
 
 function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
   const [imageErrors, setImageErrors] = useState({})
-  // التعديل هنا: هنخزن اسم اللون بدال رقمه
   const [selectedColor, setSelectedColor] = useState(null)
 
   const allImages = useMemo(() => {
@@ -53,13 +52,8 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
     return 0
   }, [product.price, product.sale_price])
 
-  // دالة الإضافة للسلة بعد التأكد من اختيار اللون
+  // التعديل هنا: شيلنا رسالة التحذير خالص، هيضيف للسلة علطول!
   const handleAddToCartClick = () => {
-    if (product.colors && product.colors.length > 0 && !selectedColor) {
-      alert(isAr ? 'برجاء اختيار اللون أولاً!' : 'Please select a color first!');
-      return;
-    }
-    // بنبعت الآي دي واسم اللون للدالة الأب
     onAddToCart?.(product.id, selectedColor);
   };
 
@@ -169,7 +163,6 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
             </p>
           )}
           
-          {/* التعديل هنا: إضافة الوصف (هيعرض أول سطرين بس عشان ميبوظش شكل الكارت) */}
           {product.description && (
             <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2">
               {product.description}
@@ -177,7 +170,7 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
           )}
         </div>
 
-        {/* اختيار الألوان */}
+        {/* اختيار الألوان (موجودة كشكل ولو اختار منها هيبعت اللون، لو مختارش مش هيمنعه) */}
         {product.colors && product.colors.length > 0 && (
           <div className="flex flex-wrap gap-1.5 py-1">
             {product.colors.map((color, index) => (
@@ -185,7 +178,6 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
                 key={index}
                 type="button"
                 title={color.color_name}
-                // التعديل هنا: بنحفظ اسم اللون بدل الـ index
                 onClick={() => setSelectedColor(color.color_name)}
                 className={`h-6 w-6 rounded-full border transition-all ${
                   selectedColor === color.color_name
@@ -220,7 +212,6 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
           <button
             type="button"
             disabled={cartBusy || !onAddToCart}
-            // التعديل هنا: استدعاء الدالة الجديدة اللي بتتشيك على اللون
             onClick={handleAddToCartClick}
             className="flex h-10 items-center justify-center rounded-xl bg-zinc-950 px-4 text-xs font-bold text-white shadow-elevated transition-all hover:bg-zinc-800 active:scale-95 dark:bg-brand-500 dark:text-white dark:hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
