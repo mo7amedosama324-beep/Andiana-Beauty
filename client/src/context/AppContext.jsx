@@ -226,17 +226,32 @@ export function AppProvider({ children }) {
     setAuthUser(null)
   }, [apiBase])
 
-  const addToCart = useCallback(async (productId, delta = 1) => {
+  const addToCart = useCallback(async (productId, selectedColor = null, delta = 1) => {
     setCartBusy(true)
     try {
       const row = await ensureCart()
-      const current = row.items?.find((line) => line.product?.id === productId)?.quantity || 0
+      
+      // هنا بنتأكد إننا بنشوف الكمية الحالية لنفس المنتج *بنفس اللون* لو موجود في السلة
+      const currentLine = row.items?.find(
+        (line) => line.product?.id === productId && line.selected_color === selectedColor
+      )
+      const current = currentLine?.quantity || 0
       const quantity = current + delta
+
+      // بنجهز الداتا اللي هتتبعت للباك إند
+      const payload = { product: productId, quantity }
+      
+      // لو العميل اختار لون، بنضيفه للـ payload
+      if (selectedColor) {
+        payload.selected_color = selectedColor
+      }
+
       const response = await fetch(`${apiBase}/carts/${row.id}/items/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product: productId, quantity }),
+        body: JSON.stringify(payload),
       })
+      
       if (!response.ok) throw new Error('add')
       setCart(await response.json())
       setCartVersion((currentVersion) => currentVersion + 1)

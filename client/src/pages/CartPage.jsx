@@ -83,9 +83,18 @@ export default function CartPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-stone-900">{line.product?.name}</p>
+                      
+                      {/* --- السطر الجديد لعرض اللون المختار --- */}
+                      {line.selected_color && (
+                        <p className="text-xs font-bold text-stone-600 my-1">
+                          {isAr ? 'اللون:' : 'Color:'} {line.selected_color}
+                        </p>
+                      )}
+                      
                       <p className="text-xs text-stone-500">{formatPrice(line.unit_price, isAr)} × {line.quantity}</p>
                     </div>
                     <div className="flex items-center gap-2">
+                      {/* لاحظ: هنحتاج نعدل updateCartLineQuantity في الـ AppContext بعدين عشان تاخد اللون في الاعتبار */}
                       <button className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-stone-700 transition-all duration-300 ease-out active:scale-95" type="button" disabled={cartBusy || line.quantity <= 1 || !pid} onClick={() => pid && updateCartLineQuantity(pid, line.quantity - 1)}>−</button>
                       <span className="min-w-[1.5rem] text-center text-sm font-semibold">{line.quantity}</span>
                       <button className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-stone-700 transition-all duration-300 ease-out active:scale-95" type="button" disabled={cartBusy || !pid} onClick={() => pid && updateCartLineQuantity(pid, line.quantity + 1)}>+</button>

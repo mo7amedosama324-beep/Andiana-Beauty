@@ -21,6 +21,7 @@ const ProductGrid = memo(function ProductGrid({ products, isAr, apiOrigin, addLa
 
 function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
   const [imageErrors, setImageErrors] = useState({})
+  // التعديل هنا: هنخزن اسم اللون بدال رقمه
   const [selectedColor, setSelectedColor] = useState(null)
 
   const allImages = useMemo(() => {
@@ -51,6 +52,16 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
     }
     return 0
   }, [product.price, product.sale_price])
+
+  // دالة الإضافة للسلة بعد التأكد من اختيار اللون
+  const handleAddToCartClick = () => {
+    if (product.colors && product.colors.length > 0 && !selectedColor) {
+      alert(isAr ? 'برجاء اختيار اللون أولاً!' : 'Please select a color first!');
+      return;
+    }
+    // بنبعت الآي دي واسم اللون للدالة الأب
+    onAddToCart?.(product.id, selectedColor);
+  };
 
   return (
     <article className="group card-surface relative flex flex-col overflow-hidden p-3 transition-all duration-300 hover:-translate-y-1 border border-black dark:border-zinc-600">
@@ -157,6 +168,13 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
               {product.category_name}
             </p>
           )}
+          
+          {/* التعديل هنا: إضافة الوصف (هيعرض أول سطرين بس عشان ميبوظش شكل الكارت) */}
+          {product.description && (
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2">
+              {product.description}
+            </p>
+          )}
         </div>
 
         {/* اختيار الألوان */}
@@ -167,11 +185,12 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
                 key={index}
                 type="button"
                 title={color.color_name}
-                onClick={() => setSelectedColor(index)}
-                className={`h-5 w-5 rounded-full border transition-all ${
-                  selectedColor === index
-                    ? 'ring-2 ring-brand-400 ring-offset-2 border-transparent'
-                    : 'border-zinc-200 dark:border-zinc-700'
+                // التعديل هنا: بنحفظ اسم اللون بدل الـ index
+                onClick={() => setSelectedColor(color.color_name)}
+                className={`h-6 w-6 rounded-full border transition-all ${
+                  selectedColor === color.color_name
+                    ? 'ring-2 ring-brand-500 ring-offset-2 border-transparent scale-110 shadow-md'
+                    : 'border-zinc-300 dark:border-zinc-600 opacity-80 hover:opacity-100'
                 }`}
                 style={{ backgroundColor: color.color_code }}
               />
@@ -201,7 +220,8 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
           <button
             type="button"
             disabled={cartBusy || !onAddToCart}
-            onClick={() => onAddToCart?.(product.id, selectedColor)}
+            // التعديل هنا: استدعاء الدالة الجديدة اللي بتتشيك على اللون
+            onClick={handleAddToCartClick}
             className="flex h-10 items-center justify-center rounded-xl bg-zinc-950 px-4 text-xs font-bold text-white shadow-elevated transition-all hover:bg-zinc-800 active:scale-95 dark:bg-brand-500 dark:text-white dark:hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {cartBusy ? (
