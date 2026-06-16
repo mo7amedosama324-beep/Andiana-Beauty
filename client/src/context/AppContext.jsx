@@ -260,16 +260,13 @@ export function AppProvider({ children }) {
     }
   }, [apiBase, ensureCart])
 
-  const updateCartLineQuantity = useCallback(async (productId, quantity, selectedColor = null) => {
+  const updateCartLineQuantity = useCallback(async (productId, quantity, selectedColor = "") => {
     const id = localStorage.getItem(CART_STORAGE_KEY)
     if (!id) return
     setCartBusy(true)
     try {
-      // بنجهز الداتا (الكمية + اللون لو العميل اختاره)
-      const payload = { product: productId, quantity }
-      if (selectedColor) {
-        payload.selected_color = selectedColor
-      }
+      // لازم نبعت اللون دايماً عشان الباك إند يعرف إحنا بنعدل كمية أنهي منتج بالظبط
+      const payload = { product: productId, quantity, selected_color: selectedColor }
 
       const response = await fetch(`${apiBase}/carts/${id}/items/`, {
         method: 'POST',
