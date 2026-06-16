@@ -47,10 +47,17 @@ export default function CartPage() {
 
   // دالة تغيير اللون من جوه السلة
   const handleColorChange = async (line, newColor) => {
-    if (!newColor || newColor === line.selected_color) return;
-    // بنمسح المنتج باللون القديم ونضيفه باللون الجديد بنفس الكمية
+    if (!newColor || newColor === line.selected_color || cartBusy) return;
     await removeCartLine(line.id);
     await updateCartLineQuantity(line.product.id, line.quantity, newColor);
+  };
+
+  // دالة معالجة تحديث الكمية لمنع الضرب في 2
+  const handleQtyUpdate = async (e, productId, newQty, selectedColor) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (cartBusy || !productId || newQty < 1) return;
+    await updateCartLineQuantity(productId, Number(newQty), selectedColor || '');
   };
 
   if (doneOrder) {
@@ -99,11 +106,10 @@ export default function CartPage() {
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-stone-900">{line.product?.name}</p>
                       
-                      {/* دوائر الألوان بدلاً من القائمة */}
+                      {/* دوائر الألوان */}
                       {fullProduct?.colors && fullProduct.colors.length > 0 && (
                         <div className="my-2 flex flex-wrap gap-1.5">
                           {fullProduct.colors.map((color, idx) => {
-                            // التريكة هنا: بنشوف هل المتسجل في السلة هو اسم اللون ولا رقمه القديم
                             const isSelected = line.selected_color === color.color_name || line.selected_color === String(idx);
                             
                             return (
@@ -128,24 +134,24 @@ export default function CartPage() {
                       <p className="text-xs text-stone-500">{formatPrice(line.unit_price, isAr)} × {line.quantity}</p>
                     </div>
                     
-                    {/* زراير الكمية */}
+                    {/* أزرار التحكم بالكمية المحدثة */}
                     <div className="flex items-center gap-2">
                       <button 
                         className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-stone-700 transition-all duration-300 ease-out active:scale-95 disabled:opacity-50" 
                         type="button" 
                         disabled={cartBusy || line.quantity <= 1 || !pid} 
-                        onClick={() => pid && updateCartLineQuantity(pid, line.quantity - 1, line.selected_color || '')}
+                        onClick={(e) => handleQtyUpdate(e, pid, line.quantity - 1, line.selected_color)}
                       >
-                        −
+                        <span className="pointer-events-none">−</span>
                       </button>
-                      <span className="min-w-[1.5rem] text-center text-sm font-semibold">{line.quantity}</span>
+                      <span className="min-w-[1.5rem] text-center text-sm font-semibold select-none">{line.quantity}</span>
                       <button 
                         className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-stone-700 transition-all duration-300 ease-out active:scale-95 disabled:opacity-50" 
                         type="button" 
                         disabled={cartBusy || !pid} 
-                        onClick={() => pid && updateCartLineQuantity(pid, line.quantity + 1, line.selected_color || '')}
+                        onClick={(e) => handleQtyUpdate(e, pid, line.quantity + 1, line.selected_color)}
                       >
-                        +
+                        <span className="pointer-events-none">+</span>
                       </button>
                       <button 
                         className="text-xs font-semibold text-rose-600 underline-offset-4 hover:underline disabled:opacity-50" 
