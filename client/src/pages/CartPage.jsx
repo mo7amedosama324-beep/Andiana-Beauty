@@ -93,7 +93,7 @@ export default function CartPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-stone-900">{line.product?.name}</p>
-                      
+
                       {/* دوائر الألوان بدلاً من القائمة (Select) */}
                       {fullProduct?.colors && fullProduct.colors.length > 0 && (
                         <div className="my-2 flex flex-wrap gap-1.5">
@@ -104,11 +104,10 @@ export default function CartPage() {
                               title={color.color_name}
                               disabled={cartBusy}
                               onClick={() => handleColorChange(line, color.color_name)}
-                              className={`h-6 w-6 rounded-full border transition-all ${
-                                line.selected_color === color.color_name
+                              className={`h-6 w-6 rounded-full border transition-all ${line.selected_color === color.color_name
                                   ? 'ring-2 ring-brand-500 ring-offset-2 border-transparent scale-110 shadow-md'
                                   : 'border-zinc-300 dark:border-zinc-600 opacity-80 hover:opacity-100'
-                              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                } disabled:opacity-50 disabled:cursor-not-allowed`}
                               style={{ backgroundColor: color.color_code }}
                             />
                           ))}
@@ -117,30 +116,49 @@ export default function CartPage() {
 
                       <p className="text-xs text-stone-500">{formatPrice(line.unit_price, isAr)} × {line.quantity}</p>
                     </div>
-                    
+
                     {/* زراير الكمية */}
                     <div className="flex items-center gap-2">
-                      <button 
-                        className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-stone-700 transition-all duration-300 ease-out active:scale-95 disabled:opacity-50" 
-                        type="button" 
-                        disabled={cartBusy || line.quantity <= 1 || !pid} 
-                        onClick={() => pid && updateCartLineQuantity(pid, line.quantity - 1, line.selected_color || '')}
+                      <button
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-stone-700 transition-all duration-300 ease-out active:scale-95 disabled:opacity-50"
+                        type="button"
+                        disabled={cartBusy || line.quantity <= 1 || !pid}
+                        onClick={() =>
+                          pid &&
+                          updateCartLineQuantity(
+                            pid,
+                            line.quantity - 1,
+                            line.selected_color || ''
+                          )
+                        }
                       >
                         −
                       </button>
-                      <span className="min-w-[1.5rem] text-center text-sm font-semibold">{line.quantity}</span>
-                      <button 
-                        className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-stone-700 transition-all duration-300 ease-out active:scale-95 disabled:opacity-50" 
-                        type="button" 
-                        disabled={cartBusy || !pid} 
-                        onClick={() => pid && updateCartLineQuantity(pid, line.quantity + 1, line.selected_color || '')}
+
+                      <span className="min-w-[1.5rem] text-center text-sm font-semibold">
+                        {line.quantity}
+                      </span>
+
+                      <button
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-stone-700 transition-all duration-300 ease-out active:scale-95 disabled:opacity-50"
+                        type="button"
+                        disabled={cartBusy || !pid}
+                        onClick={() =>
+                          pid &&
+                          updateCartLineQuantity(
+                            pid,
+                            line.quantity + 1,
+                            line.selected_color || ''
+                          )
+                        }
                       >
                         +
                       </button>
-                      <button 
-                        className="text-xs font-semibold text-rose-600 underline-offset-4 hover:underline disabled:opacity-50" 
-                        type="button" 
-                        disabled={cartBusy} 
+
+                      <button
+                        className="text-xs font-semibold text-rose-600 underline-offset-4 hover:underline disabled:opacity-50"
+                        type="button"
+                        disabled={cartBusy}
                         onClick={() => removeCartLine(line.id)}
                       >
                         {t.cartPage.remove}
