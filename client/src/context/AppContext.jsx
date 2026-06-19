@@ -265,42 +265,33 @@ export function AppProvider({ children }) {
   if (!id) return
   setCartBusy(true)
   try {
-    // أولاً: جيب الـ item id من الـ cart الحالية
-    const line = cart?.items?.find(
-      (item) => item.product?.id === productId && item.selected_color === selectedColor
-    )
-    if (!line) return
+    // جيب الـ cart من الـ state مباشرة عن طريق setter
+    setCart((currentCart) => {
+      const line = currentCart?.items?.find(
+        (item) => item.product?.id === productId && item.selected_color === selectedColor
+      )
+      if (!line) return currentCart  // مفيش تغيير
 
-    const response = await fetch(`${apiBase}/carts/${id}/items/${line.id}/`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quantity }),  // بعت الكمية الجديدة فقط
+      // عمل الـ fetch بره الـ setter
+      fetch(`${apiBase}/carts/${id}/items/${line.id}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setCart(data)
+          setCartVersion((v) => v + 1)
+        })
+        .catch(() => {})
+        .finally(() => setCartBusy(false))
+
+      return currentCart  // مؤقتاً
     })
-    if (!response.ok) throw new Error('qty')
-    setCart(await response.json())
-    setCartVersion((v) => v + 1)
-  } finally {
+  } catch {
     setCartBusy(false)
   }
-}, [apiBase, cart])
-  const checkout = useCallback(async (payload) => {
-    const id = localStorage.getItem(CART_STORAGE_KEY)
-    if (!id) throw new Error('no cart')
-    const response = await fetch(`${apiBase}/carts/${id}/checkout/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}))
-      throw new Error(typeof err.detail === 'string' ? err.detail : 'checkout failed')
-    }
-    const order = await response.json()
-    localStorage.removeItem(CART_STORAGE_KEY)
-    setCart(null)
-    setCartVersion((currentVersion) => currentVersion + 1)
-    return order
-  }, [apiBase])
+}, [apiBase])  // ← بقت من غير cart
 
   useEffect(() => {
     let cancelled = false
