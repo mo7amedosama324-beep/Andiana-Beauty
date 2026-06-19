@@ -261,39 +261,28 @@ export function AppProvider({ children }) {
   }, [apiBase, ensureCart])
 
   const updateCartLineQuantity = useCallback(async (productId, quantity, selectedColor = "") => {
-    const id = localStorage.getItem(CART_STORAGE_KEY)
-    if (!id) return
-    setCartBusy(true)
-    try {
-      // لازم نبعت اللون دايماً عشان الباك إند يعرف إحنا بنعدل كمية أنهي منتج بالظبط
-      const payload = { product: productId, quantity, selected_color: selectedColor }
+  const id = localStorage.getItem(CART_STORAGE_KEY)
+  if (!id) return
+  setCartBusy(true)
+  try {
+    // أولاً: جيب الـ item id من الـ cart الحالية
+    const line = cart?.items?.find(
+      (item) => item.product?.id === productId && item.selected_color === selectedColor
+    )
+    if (!line) return
 
-      const response = await fetch(`${apiBase}/carts/${id}/items/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      if (!response.ok) throw new Error('qty')
-      setCart(await response.json())
-      setCartVersion((currentVersion) => currentVersion + 1)
-    } finally {
-      setCartBusy(false)
-    }
-  }, [apiBase])
-  const removeCartLine = useCallback(async (itemId) => {
-    const id = localStorage.getItem(CART_STORAGE_KEY)
-    if (!id) return
-    setCartBusy(true)
-    try {
-      const response = await fetch(`${apiBase}/carts/${id}/items/${itemId}/`, { method: 'DELETE' })
-      if (!response.ok) throw new Error('delete')
-      setCart(await response.json())
-      setCartVersion((currentVersion) => currentVersion + 1)
-    } finally {
-      setCartBusy(false)
-    }
-  }, [apiBase])
-
+    const response = await fetch(`${apiBase}/carts/${id}/items/${line.id}/`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quantity }),  // بعت الكمية الجديدة فقط
+    })
+    if (!response.ok) throw new Error('qty')
+    setCart(await response.json())
+    setCartVersion((v) => v + 1)
+  } finally {
+    setCartBusy(false)
+  }
+}, [apiBase, cart])
   const checkout = useCallback(async (payload) => {
     const id = localStorage.getItem(CART_STORAGE_KEY)
     if (!id) throw new Error('no cart')
