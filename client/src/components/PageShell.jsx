@@ -19,7 +19,7 @@ export default function PageShell({
       {/* 📸 الطبقة السحرية للخلفية الثابتة: متوافقة 100% مع الموبايل والكمبيوتر */}
       <div 
         className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/images/bg-image.jpg.jpeg')" }} 
+        style={{ backgroundImage: "url('/imgs/bg-image.jpg.jpeg')" }} 
       />
 
       {/* محتوى الموقع الأساسي فوق الخلفية */}
