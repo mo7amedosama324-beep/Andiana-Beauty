@@ -213,7 +213,6 @@ export default function AdminPage() {
 
       {error ? <p className="rounded-card border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</p> : null}
 
-      {/* --- جدول الطلبات المعدل --- */}
       <section className="space-y-4 rounded-page border border-white/40 bg-white/80 p-6 shadow-soft backdrop-blur-sm">
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-display text-2xl text-stone-900">{t.admin.orders}</h2>
@@ -225,7 +224,6 @@ export default function AdminPage() {
               <tr>
                 <th className="px-4 py-3">#</th>
                 <th className="px-4 py-3">{isAr ? 'العميل' : 'Customer'}</th>
-                {/* 🔥 ضفنا عمود المنتجات هنا */}
                 <th className="px-4 py-3">{isAr ? 'المنتجات واللون' : 'Products & Color'}</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Total</th>
@@ -242,17 +240,20 @@ export default function AdminPage() {
                     <div className="text-xs text-stone-500">{order.customer_phone}</div>
                   </td>
                   
-                  {/* 🔥 هنا بنعرض كل المنتجات اللي جوه الأوردر مع ألوانها المحددة */}
                   <td className="px-4 py-3 text-stone-600">
-                    <div className="space-y-1.5">
+                    <div className="space-y-2">
                       {order.items && order.items.map((item, index) => (
-                        <div key={index} className="flex flex-wrap items-center gap-1.5 text-xs text-stone-800">
+                        <div key={index} className="flex items-center gap-2 text-xs text-stone-800">
                           <span className="font-medium text-stone-900">{item.product_name}</span>
                           <span className="text-stone-400 font-sans">({item.quantity}x)</span>
+                          
+                          {/* 🔥 التعديل هنا: عرض دائرة ملونة حقيقية بدل النص */}
                           {item.selected_color ? (
-                            <span className="inline-flex items-center gap-1 rounded-md border border-stone-200 bg-stone-100 px-1.5 py-0.5 text-[10px] font-semibold text-stone-600">
-                              {isAr ? 'اللون:' : 'Color:'} {item.selected_color}
-                            </span>
+                            <span 
+                              className="inline-block h-4 w-4 rounded-full border border-stone-300 shadow-sm transition-transform hover:scale-110"
+                              style={{ backgroundColor: item.selected_color }}
+                              title={item.selected_color} // بيظهر كود/اسم اللون لما الماوس يقف عليه (Tooltip)
+                            />
                           ) : (
                             <span className="text-[10px] text-stone-400 italic">
                               {isAr ? 'بدون لون' : 'No color'}
