@@ -172,7 +172,6 @@ export default function AdminPage() {
   }
 
   const deleteOrder = async (orderId) => {
-    // رسالة تأكيد عشان متمسحش بالغلط
     if (!window.confirm(isAr ? "هل أنت متأكد من مسح هذا الأوردر؟" : "Are you sure you want to delete this order?")) return;
 
     try {
@@ -214,6 +213,7 @@ export default function AdminPage() {
 
       {error ? <p className="rounded-card border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</p> : null}
 
+      {/* --- جدول الطلبات المعدل --- */}
       <section className="space-y-4 rounded-page border border-white/40 bg-white/80 p-6 shadow-soft backdrop-blur-sm">
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-display text-2xl text-stone-900">{t.admin.orders}</h2>
@@ -223,14 +223,46 @@ export default function AdminPage() {
           <table className="min-w-full border-collapse text-sm">
             <thead className="bg-sand-50 text-left text-xs uppercase tracking-[0.2em] text-stone-500">
               <tr>
-                <th className="px-4 py-3">#</th><th className="px-4 py-3">Customer</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Total</th><th className="px-4 py-3">Date</th><th className="px-4 py-3">Actions</th>
+                <th className="px-4 py-3">#</th>
+                <th className="px-4 py-3">{isAr ? 'العميل' : 'Customer'}</th>
+                {/* 🔥 ضفنا عمود المنتجات هنا */}
+                <th className="px-4 py-3">{isAr ? 'المنتجات واللون' : 'Products & Color'}</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Total</th>
+                <th className="px-4 py-3">Date</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody>
               {orders.map((order) => (
                 <tr key={order.id} className="border-t border-brand-100 transition hover:bg-stone-50">
                   <td className="px-4 py-3 font-semibold text-stone-900">{order.id}</td>
-                  <td className="px-4 py-3 text-stone-600"><div className="font-semibold text-stone-900">{order.customer_name}</div><div className="text-xs text-stone-500">{order.customer_phone}</div></td>
+                  <td className="px-4 py-3 text-stone-600">
+                    <div className="font-semibold text-stone-900">{order.customer_name}</div>
+                    <div className="text-xs text-stone-500">{order.customer_phone}</div>
+                  </td>
+                  
+                  {/* 🔥 هنا بنعرض كل المنتجات اللي جوه الأوردر مع ألوانها المحددة */}
+                  <td className="px-4 py-3 text-stone-600">
+                    <div className="space-y-1.5">
+                      {order.items && order.items.map((item, index) => (
+                        <div key={index} className="flex flex-wrap items-center gap-1.5 text-xs text-stone-800">
+                          <span className="font-medium text-stone-900">{item.product_name}</span>
+                          <span className="text-stone-400 font-sans">({item.quantity}x)</span>
+                          {item.selected_color ? (
+                            <span className="inline-flex items-center gap-1 rounded-md border border-stone-200 bg-stone-100 px-1.5 py-0.5 text-[10px] font-semibold text-stone-600">
+                              {isAr ? 'اللون:' : 'Color:'} {item.selected_color}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-stone-400 italic">
+                              {isAr ? 'بدون لون' : 'No color'}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+
                   <td className="px-4 py-3 text-stone-600">{order.status}</td>
                   <td className="px-4 py-3 font-semibold text-stone-900">{formatPrice(order.total, isAr)}</td>
                   <td className="px-4 py-3 text-stone-500">{new Date(order.created_at).toLocaleString(isAr ? 'ar-EG' : 'en-EG')}</td>
@@ -255,10 +287,8 @@ export default function AdminPage() {
               <label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'الوصف' : 'Description'}</span><textarea className="input-surface min-h-[110px]" value={productForm.description} onChange={(event) => setProductForm((prev) => ({ ...prev, description: event.target.value }))} /></label>
               <div className="grid gap-4 sm:grid-cols-3"><label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'السعر' : 'Price'}</span><input className="input-surface" type="number" step="0.01" value={productForm.price} onChange={(event) => setProductForm((prev) => ({ ...prev, price: event.target.value }))} /></label><label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'سعر التخفيض' : 'Sale price'}</span><input className="input-surface" type="number" step="0.01" value={productForm.sale_price} onChange={(event) => setProductForm((prev) => ({ ...prev, sale_price: event.target.value }))} /></label><label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'نشط' : 'Active'}</span><input className="h-11 rounded-2xl border border-brand-200 bg-white px-4" type="checkbox" checked={productForm.is_active} onChange={(event) => setProductForm((prev) => ({ ...prev, is_active: event.target.checked }))} /></label></div>
               
-              {/* رفع الصورة الأساسية */}
               <label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'الصورة الأساسية' : 'Main Image'}</span><input className="rounded-2xl border border-brand-200 bg-white px-4 py-3 text-sm" type="file" accept="image/*" onChange={(event) => setProductForm((prev) => ({ ...prev, imageFile: event.target.files?.[0] || null }))} /></label>
 
-              {/* قسم الألوان الجديد */}
               <div className="space-y-3 rounded-xl border border-brand-100 bg-white p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold text-stone-700">{isAr ? 'الألوان المتاحة' : 'Available Colors'}</span>
@@ -273,7 +303,6 @@ export default function AdminPage() {
                 ))}
               </div>
 
-              {/* قسم الصور الإضافية */}
               <label className="grid gap-2 text-sm font-semibold text-stone-700">
                 <span>{isAr ? 'صور إضافية للمنتج' : 'Additional Images'}</span>
                 <input className="rounded-2xl border border-brand-200 bg-white px-4 py-3 text-sm" type="file" accept="image/*" multiple onChange={(event) => setAdditionalImages(Array.from(event.target.files || []))} />
