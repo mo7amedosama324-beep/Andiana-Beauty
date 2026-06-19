@@ -272,6 +272,24 @@ export function AppProvider({ children }) {
     setCartBusy(false)
   }
 }, [apiBase])
+const checkout = useCallback(async (payload) => {
+  const id = localStorage.getItem(CART_STORAGE_KEY)
+  if (!id) throw new Error('no cart')
+  const response = await fetch(`${apiBase}/carts/${id}/checkout/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}))
+    throw new Error(typeof err.detail === 'string' ? err.detail : 'checkout failed')
+  }
+  const order = await response.json()
+  localStorage.removeItem(CART_STORAGE_KEY)
+  setCart(null)
+  setCartVersion((v) => v + 1)
+  return order
+}, [apiBase])
 
   const updateCartLineQuantity = useCallback(async (productId, quantity, selectedColor = "") => {
   const id = localStorage.getItem(CART_STORAGE_KEY)
