@@ -129,7 +129,6 @@ export default function AdminPage() {
       const target = categoryForm.id ? `${apiBase}/categories/${categoryForm.id}/` : `${apiBase}/categories/`
       const method = categoryForm.id ? 'PATCH' : 'POST'
       const response = await authFetch(target, {
-        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: categoryForm.name }),
       })
@@ -240,27 +239,51 @@ export default function AdminPage() {
                     <div className="text-xs text-stone-500">{order.customer_phone}</div>
                   </td>
                   
+                  {/* عمود عرض المنتجات والألوان بعد التحديث الذكي والآمن */}
                   <td className="px-4 py-3 text-stone-600">
                     <div className="space-y-2">
-                      {order.items && order.items.map((item, index) => (
-                        <div key={index} className="flex items-center gap-2 text-xs text-stone-800">
-                          <span className="font-medium text-stone-900">{item.product_name}</span>
-                          <span className="text-stone-400 font-sans">({item.quantity}x)</span>
-                          
-                          {/* 🔥 التعديل هنا: عرض دائرة ملونة حقيقية بدل النص */}
-                          {item.selected_color ? (
-                            <span 
-                              className="inline-block h-4 w-4 rounded-full border border-stone-300 shadow-sm transition-transform hover:scale-110"
-                              style={{ backgroundColor: item.selected_color }}
-                              title={item.selected_color} // بيظهر كود/اسم اللون لما الماوس يقف عليه (Tooltip)
-                            />
-                          ) : (
-                            <span className="text-[10px] text-stone-400 italic">
-                              {isAr ? 'بدون لون' : 'No color'}
-                            </span>
-                          )}
-                        </div>
-                      ))}
+                      {order.items && order.items.map((item, index) => {
+                        let colorStyle = '#ffffff'; 
+                        let colorTextToShow = '';
+
+                        if (item.selected_color) {
+                          if (typeof item.selected_color === 'object') {
+                            colorStyle = item.selected_color.color_code || item.selected_color.code || '#ffffff';
+                            colorTextToShow = item.selected_color.color_name || colorStyle;
+                          } else if (typeof item.selected_color === 'string') {
+                            colorTextToShow = item.selected_color;
+                            if (/^[0-9A-F]{6}$/i.test(item.selected_color)) {
+                              colorStyle = `#${item.selected_color}`;
+                            } else {
+                              colorStyle = item.selected_color; 
+                            }
+                          }
+                        }
+
+                        return (
+                          <div key={index} className="flex items-center gap-2 text-xs text-stone-800">
+                            <span className="font-medium text-stone-900">{item.product_name}</span>
+                            <span className="text-stone-400 font-sans">({item.quantity}x)</span>
+                            
+                            {item.selected_color ? (
+                              <div className="flex items-center gap-1.5">
+                                <span 
+                                  className="inline-block h-4 w-4 rounded-full border border-stone-300 shadow-sm transition-transform hover:scale-110"
+                                  style={{ backgroundColor: colorStyle }}
+                                  title={colorStyle}
+                                />
+                                <span className="text-[10px] bg-stone-100 text-stone-600 px-1.5 py-0.5 rounded font-mono">
+                                  {colorTextToShow}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-stone-400 italic">
+                                {isAr ? 'بدون لون' : 'No color'}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </td>
 
