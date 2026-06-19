@@ -259,6 +259,19 @@ export function AppProvider({ children }) {
       setCartBusy(false)
     }
   }, [apiBase, ensureCart])
+  const removeCartLine = useCallback(async (itemId) => {
+  const id = localStorage.getItem(CART_STORAGE_KEY)
+  if (!id) return
+  setCartBusy(true)
+  try {
+    const response = await fetch(`${apiBase}/carts/${id}/items/${itemId}/`, { method: 'DELETE' })
+    if (!response.ok) throw new Error('delete')
+    setCart(await response.json())
+    setCartVersion((v) => v + 1)
+  } finally {
+    setCartBusy(false)
+  }
+}, [apiBase])
 
   const updateCartLineQuantity = useCallback(async (productId, quantity, selectedColor = "") => {
   const id = localStorage.getItem(CART_STORAGE_KEY)
