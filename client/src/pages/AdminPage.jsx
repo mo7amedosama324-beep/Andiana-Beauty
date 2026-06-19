@@ -129,6 +129,7 @@ export default function AdminPage() {
       const target = categoryForm.id ? `${apiBase}/categories/${categoryForm.id}/` : `${apiBase}/categories/`
       const method = categoryForm.id ? 'PATCH' : 'POST'
       const response = await authFetch(target, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: categoryForm.name }),
       })
@@ -239,7 +240,7 @@ export default function AdminPage() {
                     <div className="text-xs text-stone-500">{order.customer_phone}</div>
                   </td>
                   
-                  {/* عمود عرض المنتجات والألوان بعد التحديث الذكي والآمن */}
+                  {/* التحديث الذكي هنا للبحث عن كود الـ Hex المقابل للرقم */}
                   <td className="px-4 py-3 text-stone-600">
                     <div className="space-y-2">
                       {order.items && order.items.map((item, index) => {
@@ -250,12 +251,21 @@ export default function AdminPage() {
                           if (typeof item.selected_color === 'object') {
                             colorStyle = item.selected_color.color_code || item.selected_color.code || '#ffffff';
                             colorTextToShow = item.selected_color.color_name || colorStyle;
-                          } else if (typeof item.selected_color === 'string') {
-                            colorTextToShow = item.selected_color;
-                            if (/^[0-9A-F]{6}$/i.test(item.selected_color)) {
-                              colorStyle = `#${item.selected_color}`;
+                          } else {
+                            const colorStr = String(item.selected_color);
+                            colorTextToShow = colorStr;
+
+                            // 🔍 بنروح للمنتجات ونطابق اسم المنتج عشان نجيب مصفوفة الألوان بتاعته
+                            const currentProduct = products.find(p => p.name === item.product_name);
+                            // بنجيب اللون اللي الـ color_name بتاعه بيساوي الرقم (زي "3")
+                            const matchedColorObj = currentProduct?.colors?.find(c => String(c.color_name) === colorStr);
+
+                            if (matchedColorObj?.color_code) {
+                              colorStyle = matchedColorObj.color_code; // الكود الحقيقي هنا (#ff0000 مثلاً)
+                            } else if (/^[0-9A-F]{6}$/i.test(colorStr)) {
+                              colorStyle = `#${colorStr}`;
                             } else {
-                              colorStyle = item.selected_color; 
+                              colorStyle = colorStr; 
                             }
                           }
                         }
@@ -270,7 +280,7 @@ export default function AdminPage() {
                                 <span 
                                   className="inline-block h-4 w-4 rounded-full border border-stone-300 shadow-sm transition-transform hover:scale-110"
                                   style={{ backgroundColor: colorStyle }}
-                                  title={colorStyle}
+                                  title={`درجة: ${colorTextToShow}`}
                                 />
                                 <span className="text-[10px] bg-stone-100 text-stone-600 px-1.5 py-0.5 rounded font-mono">
                                   {colorTextToShow}
