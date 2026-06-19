@@ -16,22 +16,15 @@ export default function PageShell({
   return (
     <div className={`relative min-h-screen text-stone-900 ${isAr ? 'font-arabic' : 'font-body'}`} dir={isAr ? 'rtl' : 'ltr'}>
       
-      {/* 📸 طبقة الخلفية المتجاوبة والذكية (Responsive Background Layer) */}
+      {/* 📸 الخلفية بمسارات ملفاتك الحقيقية بالظبط وبأفضل تنسيق للأبعاد */}
       <div 
         className="fixed inset-0 -z-10 
                    bg-cover 
-                   {/* 📝 تم تعديل البوزيشن هنا (bg-[...%_...%]) */}
-                   bg-[10%_top]  {/* الديفولت للموبايل: الصورة تيجي من أقصى اليمين وفوق */}
-                   
-                   md:bg-center   {/* md: للكمبيوتر: ترجع تتوسطن */}
-                   
-                   bg-no-repeat
-                   
-                   {/* ⚠️ الصورة الافتراضية: للموبايل (طولية) */}
-                   bg-[url('/images/bg-mobile.jpg')] 
-                   
-                   {/* ⚠️md breakpoint: الصورة للاب (عرضية) */}
-                   md:bg-[url('/images/bg-desktop.jpg')]
+                   bg-top           {/* للموبايل: الصورة تبدأ من فوق عشان تظهر كاملة على قد ما تقدر */}
+                   md:bg-center     {/* للكمبيوتر: الصورة تتوسطن في الشاشة */}
+                   bg-no-repeat 
+                   bg-[url('/imgs/bg-image.jpg.jpeg')]   {/* صورة الفون الحقيقية */}
+                   md:bg-[url('/imgs/mo.jpeg')]          {/* صورة اللاب الحقيقية */}
         "
       />
 
@@ -45,7 +38,7 @@ export default function PageShell({
           onLogout={onLogout}
           cartCount={cartCount}
           nudePalette={nudePalette}
-          onTogglePalette={togglePalette}
+          onTogglePalette={onTogglePalette}
         />
         {children}
         <Footer isAr={isAr} />
