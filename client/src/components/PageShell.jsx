@@ -16,13 +16,18 @@ export default function PageShell({
   return (
     <div className={`relative min-h-screen text-stone-900 ${isAr ? 'font-arabic' : 'font-body'}`} dir={isAr ? 'rtl' : 'ltr'}>
       
-      {/* 📸 الطبقة السحرية للخلفية الثابتة: متوافقة 100% مع الموبايل والكمبيوتر */}
+      {/* 📸 طبقة الخلفية المتجاوبة (Responsive Background Layer) */}
       <div 
-        className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/imgs/bg-image.jpg.jpeg')" }} 
+        className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat
+                   {/* ⚠️ الصورة الافتراضية: للموبايل (طولية) */}
+                   bg-[url('/imgs/bg-image.jpg.jpeg')] 
+                   
+                   {/* ⚠️ الصورة عند الشاشات المتوسطة والكبيرة (md:): للاب (عرضية) */}
+                   md:bg-[url('/imgs/mo.jpeg')]
+        "
       />
 
-      {/* محتوى الموقع الأساسي فوق الخلفية */}
+      {/* محتوى الموقع الأساسي */}
       <div className={`mx-auto flex ${maxWidth} flex-col gap-8 px-4 pb-16 pt-6 sm:px-6 lg:px-8 lg:pt-8`}>
         <SiteHeader
           isAr={isAr}
