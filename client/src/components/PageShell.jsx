@@ -14,12 +14,15 @@ export default function PageShell({
   maxWidth = 'max-w-7xl',
 }) {
   return (
-    <div 
-      className={`min-h-screen text-stone-900 bg-cover bg-center bg-no-repeat bg-fixed ${isAr ? 'font-arabic' : 'font-body'}`} 
-      dir={isAr ? 'rtl' : 'ltr'}
-      // ⚠️ ضع هنا اسم صورتك الحقيقي الموجود داخل فولدر public
-      style={{ backgroundImage: "url('/imgs/bg-image.jpg.jpeg')" }}
-    >
+    <div className={`relative min-h-screen text-stone-900 ${isAr ? 'font-arabic' : 'font-body'}`} dir={isAr ? 'rtl' : 'ltr'}>
+      
+      {/* 📸 الطبقة السحرية للخلفية الثابتة: متوافقة 100% مع الموبايل والكمبيوتر */}
+      <div 
+        className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/images/bg-image.jpg')" }} 
+      />
+
+      {/* محتوى الموقع الأساسي فوق الخلفية */}
       <div className={`mx-auto flex ${maxWidth} flex-col gap-8 px-4 pb-16 pt-6 sm:px-6 lg:px-8 lg:pt-8`}>
         <SiteHeader
           isAr={isAr}
