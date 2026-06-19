@@ -40,7 +40,7 @@ export default function SiteHeader({ isAr, setLang, t, authUser, onLogout, cartC
     <>
       <header className="glass-surface sticky top-4 z-20 flex flex-wrap items-center justify-between gap-4 rounded-[1.75rem] border border-brand-100 px-5 py-4 shadow-soft backdrop-blur-xl">
         <div className="flex items-center gap-4">
-          <img className="h-14 w-14 rounded-xl object-cover shadow-sm" src="/imgs/image.png" alt="Andiana Beauty" loading="lazy" />
+          <img className="h-14 w-14 rounded-xl object-cover shadow-sm" src="/imgs/WhatsApp Image 2026-06-19 at 4.16.12 PM.jpeg" alt="Andiana Beauty" loading="lazy" />
           <div className="hidden sm:block">
             <p className="font-display text-lg text-stone-900">Andiana</p>
             <p className="text-xs uppercase tracking-[0.3em] text-stone-400">Beauty</p>
