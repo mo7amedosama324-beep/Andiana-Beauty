@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import en from '../locales/en.json'
 import ar from '../locales/ar.json'
 import { CART_STORAGE_KEY, getApiOrigin } from '../lib/formatters'
@@ -34,11 +34,16 @@ export function AppProvider({ children }) {
   const [users, setUsers] = useState([])
   const [orders, setOrders] = useState([])
 
+  // ← cartRef عشان نقدر نوصل للـ cart الحالية من جوه الـ callbacks من غير ما نضيفها في deps
+  const cartRef = useRef(cart)
+  useEffect(() => { cartRef.current = cart }, [cart])
+
   const apiBase = DEFAULT_API_BASE
   const apiOrigin = useMemo(() => getApiOrigin(apiBase), [apiBase])
   const isAr = lang === 'ar'
   const t = useMemo(() => (isAr ? ar : en), [isAr])
 
+  // ─── Lang & Palette ──────────────────────────────────────────────────────────
   useEffect(() => {
     try {
       const storedLang = localStorage.getItem('andiana-lang')
@@ -67,16 +72,15 @@ export function AppProvider({ children }) {
   const setLanguage = useCallback((nextLang) => setLang(nextLang), [])
   const togglePalette = useCallback(() => setNudePalette((current) => !current), [])
 
+  // ─── Auth ────────────────────────────────────────────────────────────────────
   const authFetch = useCallback(async (url, options = {}) => {
     const token = localStorage.getItem('access_token')
     if (!token) throw new Error('No token found')
-
     const headers = new Headers(options.headers || {})
     if (!(options.body instanceof FormData) && !headers.has('Content-Type')) {
       headers.set('Content-Type', 'application/json')
     }
     headers.set('Authorization', `Bearer ${token}`)
-
     return fetch(url, { ...options, headers })
   }, [])
 
@@ -93,20 +97,17 @@ export function AppProvider({ children }) {
   const refreshAccessToken = useCallback(async () => {
     const refreshToken = localStorage.getItem('refresh_token')
     if (!refreshToken) return false
-
     try {
       const response = await fetch(`${apiBase}/token/cookie/refresh/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh: refreshToken }),
       })
-
       if (!response.ok) {
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
         return false
       }
-
       const data = await response.json()
       localStorage.setItem('access_token', data.access)
       if (data.refresh) localStorage.setItem('refresh_token', data.refresh)
@@ -115,76 +116,6 @@ export function AppProvider({ children }) {
       return false
     }
   }, [apiBase])
-
-  const refreshCart = useCallback(async () => {
-    const id = localStorage.getItem(CART_STORAGE_KEY)
-    if (!id) {
-      setCart(null)
-      return
-    }
-
-    try {
-      const response = await fetch(`${apiBase}/carts/${id}/`)
-      if (!response.ok) {
-        localStorage.removeItem(CART_STORAGE_KEY)
-        setCart(null)
-        return
-      }
-      setCart(await response.json())
-    } catch {
-      setCart(null)
-    }
-  }, [apiBase])
-
-  const ensureCart = useCallback(async () => {
-    const existingId = localStorage.getItem(CART_STORAGE_KEY)
-    if (existingId) {
-      const existingResponse = await fetch(`${apiBase}/carts/${existingId}/`)
-      if (existingResponse.ok) {
-        const data = await existingResponse.json()
-        setCart(data)
-        return data
-      }
-      localStorage.removeItem(CART_STORAGE_KEY)
-    }
-
-    const response = await fetch(`${apiBase}/carts/`, { method: 'POST' })
-    if (!response.ok) throw new Error('cart')
-    const data = await response.json()
-    localStorage.setItem(CART_STORAGE_KEY, data.id)
-    setCart(data)
-    return data
-  }, [apiBase])
-
-  const fetchProducts = useCallback(async () => {
-    setProductsLoading(true)
-    setProductsError('')
-    try {
-      const response = await fetch(`${apiBase}/products/`)
-      if (!response.ok) throw new Error('products')
-      const data = await response.json()
-      setProducts(Array.isArray(data) ? data : data.results || [])
-    } catch {
-      setProductsError(isAr ? 'تعذر تحميل المنتجات الآن' : 'Unable to load products right now')
-    } finally {
-      setProductsLoading(false)
-    }
-  }, [apiBase, isAr])
-
-  const fetchCategories = useCallback(async () => {
-    setCategoriesLoading(true)
-    setCategoriesError('')
-    try {
-      const response = await fetch(`${apiBase}/categories/`)
-      if (!response.ok) throw new Error('categories')
-      const data = await response.json()
-      setCategories(Array.isArray(data) ? data : data.results || [])
-    } catch {
-      setCategoriesError(isAr ? 'تعذر تحميل الأقسام الآن' : 'Unable to load categories right now')
-    } finally {
-      setCategoriesLoading(false)
-    }
-  }, [apiBase, isAr])
 
   const handleLogin = useCallback(async (payload) => {
     setAuthError('')
@@ -220,113 +151,167 @@ export function AppProvider({ children }) {
         })
       } catch {}
     }
-
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
     setAuthUser(null)
   }, [apiBase])
 
+  // ─── Products & Categories ───────────────────────────────────────────────────
+  const fetchProducts = useCallback(async () => {
+    setProductsLoading(true)
+    setProductsError('')
+    try {
+      const response = await fetch(`${apiBase}/products/`)
+      if (!response.ok) throw new Error('products')
+      const data = await response.json()
+      setProducts(Array.isArray(data) ? data : data.results || [])
+    } catch {
+      setProductsError(isAr ? 'تعذر تحميل المنتجات الآن' : 'Unable to load products right now')
+    } finally {
+      setProductsLoading(false)
+    }
+  }, [apiBase, isAr])
+
+  const fetchCategories = useCallback(async () => {
+    setCategoriesLoading(true)
+    setCategoriesError('')
+    try {
+      const response = await fetch(`${apiBase}/categories/`)
+      if (!response.ok) throw new Error('categories')
+      const data = await response.json()
+      setCategories(Array.isArray(data) ? data : data.results || [])
+    } catch {
+      setCategoriesError(isAr ? 'تعذر تحميل الأقسام الآن' : 'Unable to load categories right now')
+    } finally {
+      setCategoriesLoading(false)
+    }
+  }, [apiBase, isAr])
+
+  // ─── Cart ────────────────────────────────────────────────────────────────────
+  const refreshCart = useCallback(async () => {
+    const id = localStorage.getItem(CART_STORAGE_KEY)
+    if (!id) { setCart(null); return }
+    try {
+      const response = await fetch(`${apiBase}/carts/${id}/`)
+      if (!response.ok) {
+        localStorage.removeItem(CART_STORAGE_KEY)
+        setCart(null)
+        return
+      }
+      setCart(await response.json())
+    } catch {
+      setCart(null)
+    }
+  }, [apiBase])
+
+  const ensureCart = useCallback(async () => {
+    const existingId = localStorage.getItem(CART_STORAGE_KEY)
+    if (existingId) {
+      const existingResponse = await fetch(`${apiBase}/carts/${existingId}/`)
+      if (existingResponse.ok) {
+        const data = await existingResponse.json()
+        setCart(data)
+        return data
+      }
+      localStorage.removeItem(CART_STORAGE_KEY)
+    }
+    const response = await fetch(`${apiBase}/carts/`, { method: 'POST' })
+    if (!response.ok) throw new Error('cart')
+    const data = await response.json()
+    localStorage.setItem(CART_STORAGE_KEY, data.id)
+    setCart(data)
+    return data
+  }, [apiBase])
+
+  // addToCart: بتضيف منتج للسلة - بتحسب الكمية الحالية وتضيف عليها
   const addToCart = useCallback(async (productId, selectedColor = null, delta = 1) => {
     setCartBusy(true)
     try {
       const row = await ensureCart()
-      
-      // هنا بنتأكد إننا بنشوف الكمية الحالية لنفس المنتج *بنفس اللون* لو موجود في السلة
       const currentLine = row.items?.find(
         (line) => line.product?.id === productId && line.selected_color === selectedColor
       )
       const current = currentLine?.quantity || 0
       const quantity = current + delta
-
-      // بنجهز الداتا اللي هتتبعت للباك إند
       const payload = { product: productId, quantity }
-      
-      // لو العميل اختار لون، بنضيفه للـ payload
-      if (selectedColor) {
-        payload.selected_color = selectedColor
-      }
+      if (selectedColor) payload.selected_color = selectedColor
 
       const response = await fetch(`${apiBase}/carts/${row.id}/items/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      
       if (!response.ok) throw new Error('add')
       setCart(await response.json())
-      setCartVersion((currentVersion) => currentVersion + 1)
+      setCartVersion((v) => v + 1)
     } finally {
       setCartBusy(false)
     }
   }, [apiBase, ensureCart])
-  const removeCartLine = useCallback(async (itemId) => {
-  const id = localStorage.getItem(CART_STORAGE_KEY)
-  if (!id) return
-  setCartBusy(true)
-  try {
-    const response = await fetch(`${apiBase}/carts/${id}/items/${itemId}/`, { method: 'DELETE' })
-    if (!response.ok) throw new Error('delete')
-    setCart(await response.json())
-    setCartVersion((v) => v + 1)
-  } finally {
-    setCartBusy(false)
-  }
-}, [apiBase])
-const checkout = useCallback(async (payload) => {
-  const id = localStorage.getItem(CART_STORAGE_KEY)
-  if (!id) throw new Error('no cart')
-  const response = await fetch(`${apiBase}/carts/${id}/checkout/`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}))
-    throw new Error(typeof err.detail === 'string' ? err.detail : 'checkout failed')
-  }
-  const order = await response.json()
-  localStorage.removeItem(CART_STORAGE_KEY)
-  setCart(null)
-  setCartVersion((v) => v + 1)
-  return order
-}, [apiBase])
 
+  // updateCartLineQuantity: بتعدل كمية item موجود عن طريق PATCH
+  // بتستخدم cartRef عشان تجيب الـ line.id من غير ما تسبب infinite loop
   const updateCartLineQuantity = useCallback(async (productId, quantity, selectedColor = "") => {
-  const id = localStorage.getItem(CART_STORAGE_KEY)
-  if (!id) return
-  setCartBusy(true)
-  try {
-    // جيب الـ cart من الـ state مباشرة عن طريق setter
-    setCart((currentCart) => {
-      const line = currentCart?.items?.find(
+    const id = localStorage.getItem(CART_STORAGE_KEY)
+    if (!id) return
+    setCartBusy(true)
+    try {
+      const line = cartRef.current?.items?.find(
         (item) => item.product?.id === productId && item.selected_color === selectedColor
       )
-      if (!line) return currentCart  // مفيش تغيير
+      if (!line) { setCartBusy(false); return }
 
-      // عمل الـ fetch بره الـ setter
-      fetch(`${apiBase}/carts/${id}/items/${line.id}/`, {
+      const response = await fetch(`${apiBase}/carts/${id}/items/${line.id}/`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ quantity }),
       })
-        .then((res) => res.json())
-        .then((data) => {
-          setCart(data)
-          setCartVersion((v) => v + 1)
-        })
-        .catch(() => {})
-        .finally(() => setCartBusy(false))
+      if (!response.ok) throw new Error('qty')
+      setCart(await response.json())
+      setCartVersion((v) => v + 1)
+    } finally {
+      setCartBusy(false)
+    }
+  }, [apiBase]) // ← مفيش cart في الـ deps - بنستخدم cartRef بدلها
 
-      return currentCart  // مؤقتاً
+  // removeCartLine: بتحذف item من السلة عن طريق DELETE
+  const removeCartLine = useCallback(async (itemId) => {
+    const id = localStorage.getItem(CART_STORAGE_KEY)
+    if (!id) return
+    setCartBusy(true)
+    try {
+      const response = await fetch(`${apiBase}/carts/${id}/items/${itemId}/`, { method: 'DELETE' })
+      if (!response.ok) throw new Error('delete')
+      setCart(await response.json())
+      setCartVersion((v) => v + 1)
+    } finally {
+      setCartBusy(false)
+    }
+  }, [apiBase])
+
+  // checkout: بتكمّل الطلب وتمسح السلة
+  const checkout = useCallback(async (payload) => {
+    const id = localStorage.getItem(CART_STORAGE_KEY)
+    if (!id) throw new Error('no cart')
+    const response = await fetch(`${apiBase}/carts/${id}/checkout/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     })
-  } catch {
-    setCartBusy(false)
-  }
-}, [apiBase])  // ← بقت من غير cart
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}))
+      throw new Error(typeof err.detail === 'string' ? err.detail : 'checkout failed')
+    }
+    const order = await response.json()
+    localStorage.removeItem(CART_STORAGE_KEY)
+    setCart(null)
+    setCartVersion((v) => v + 1)
+    return order
+  }, [apiBase])
 
+  // ─── Init ────────────────────────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false
-
     ;(async () => {
       await Promise.all([fetchProducts(), fetchCategories(), refreshCart()])
       try {
@@ -336,27 +321,23 @@ const checkout = useCallback(async (payload) => {
         const refreshed = await refreshAccessToken()
         if (cancelled) return
         if (refreshed) {
-          try {
-            setAuthUser(await fetchProfile())
-          } catch {
-            setAuthUser(null)
-          }
+          try { setAuthUser(await fetchProfile()) }
+          catch { setAuthUser(null) }
         } else {
           setAuthUser(null)
         }
       }
     })()
-
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [fetchCategories, fetchProducts, fetchProfile, refreshAccessToken, refreshCart])
 
+  // ─── Derived ─────────────────────────────────────────────────────────────────
   const cartItemCount = useMemo(
     () => cart?.items?.reduce((acc, line) => acc + (line.quantity || 0), 0) ?? 0,
     [cart],
   )
 
+  // ─── Context Value ───────────────────────────────────────────────────────────
   const value = useMemo(
     () => ({
       apiBase,
@@ -421,9 +402,7 @@ const checkout = useCallback(async (payload) => {
       categoriesLoading,
       categoriesError,
       users,
-      setUsers,
       orders,
-      setOrders,
       setProducts,
       setCategories,
       cart,
@@ -437,7 +416,6 @@ const checkout = useCallback(async (payload) => {
       checkout,
       fetchProducts,
       fetchCategories,
-      apiOrigin,
     ],
   )
 
