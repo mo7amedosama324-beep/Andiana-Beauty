@@ -11,17 +11,18 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   
-  // الفورم الأساسية
-  const [categoryForm, setCategoryForm] = useState({ id: null, name: '' })
+  // الفورم الأساسية مع إضافة حقل للصورة الحالية
   const [productForm, setProductForm] = useState({ 
     id: null, category: '', name: '', description: '', 
-    price: '', sale_price: '', imageFile: null, is_active: true 
+    price: '', sale_price: '', imageFile: null, is_active: true,
+    currentImage: '' 
   })
+  const [categoryForm, setCategoryForm] = useState({ id: null, name: '' })
   
   // State للألوان والصور الإضافية
   const [productColors, setProductColors] = useState([]) // [{name: '', code: '#000000'}]
-  const [additionalImages, setAdditionalImages] = useState([]) // Array of Files
-  const [additionalImageUrls, setAdditionalImageUrls] = useState([]) // Existing image URLs
+  const [additionalImages, setAdditionalImages] = useState([]) // مصفوفة ملفات الـ Files الجديدة
+  const [additionalImageUrls, setAdditionalImageUrls] = useState([]) // مصفوفة روابط الصور القديمة من الـ Backend
 
   const [deleteTarget, setDeleteTarget] = useState(null)
 
@@ -67,7 +68,7 @@ export default function AdminPage() {
   }, [refreshAdminData])
 
   const resetProductForm = () => {
-    setProductForm({ id: null, category: '', name: '', description: '', price: '', sale_price: '', imageFile: null, is_active: true })
+    setProductForm({ id: null, category: '', name: '', description: '', price: '', sale_price: '', imageFile: null, is_active: true, currentImage: '' })
     setProductColors([])
     setAdditionalImages([])
     setAdditionalImageUrls([])
@@ -98,11 +99,13 @@ export default function AdminPage() {
 
       if (productForm.imageFile) formData.append('image', productForm.imageFile)
 
+      // رفع الملفات الجديدة
       additionalImages.forEach((file) => {
         formData.append('additional_images', file)
       })
 
-      if (additionalImageUrls.length > 0) {
+      // عند التعديل: نرسل دائماً لستة الروابط المتبقية حتى لو أصبحت فارغة ليعرف الباكيند ما تم حذفه
+      if (productForm.id) {
         formData.append('additional_images_data', JSON.stringify(additionalImageUrls))
       }
 
@@ -240,7 +243,6 @@ export default function AdminPage() {
                     <div className="text-xs text-stone-500">{order.customer_phone}</div>
                   </td>
                   
-                  {/* التحديث الذكي هنا للبحث عن كود الـ Hex المقابل للرقم */}
                   <td className="px-4 py-3 text-stone-600">
                     <div className="space-y-2">
                       {order.items && order.items.map((item, index) => {
@@ -255,13 +257,11 @@ export default function AdminPage() {
                             const colorStr = String(item.selected_color);
                             colorTextToShow = colorStr;
 
-                            // 🔍 بنروح للمنتجات ونطابق اسم المنتج عشان نجيب مصفوفة الألوان بتاعته
                             const currentProduct = products.find(p => p.name === item.product_name);
-                            // بنجيب اللون اللي الـ color_name بتاعه بيساوي الرقم (زي "3")
                             const matchedColorObj = currentProduct?.colors?.find(c => String(c.color_name) === colorStr);
 
                             if (matchedColorObj?.color_code) {
-                              colorStyle = matchedColorObj.color_code; // الكود الحقيقي هنا (#ff0000 مثلاً)
+                              colorStyle = matchedColorObj.color_code;
                             } else if (/^[0-9A-F]{6}$/i.test(colorStr)) {
                               colorStyle = `#${colorStr}`;
                             } else {
@@ -321,7 +321,26 @@ export default function AdminPage() {
               <label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'الوصف' : 'Description'}</span><textarea className="input-surface min-h-[110px]" value={productForm.description} onChange={(event) => setProductForm((prev) => ({ ...prev, description: event.target.value }))} /></label>
               <div className="grid gap-4 sm:grid-cols-3"><label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'السعر' : 'Price'}</span><input className="input-surface" type="number" step="0.01" value={productForm.price} onChange={(event) => setProductForm((prev) => ({ ...prev, price: event.target.value }))} /></label><label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'سعر التخفيض' : 'Sale price'}</span><input className="input-surface" type="number" step="0.01" value={productForm.sale_price} onChange={(event) => setProductForm((prev) => ({ ...prev, sale_price: event.target.value }))} /></label><label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'نشط' : 'Active'}</span><input className="h-11 rounded-2xl border border-brand-200 bg-white px-4" type="checkbox" checked={productForm.is_active} onChange={(event) => setProductForm((prev) => ({ ...prev, is_active: event.target.checked }))} /></label></div>
               
-              <label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'الصورة الأساسية' : 'Main Image'}</span><input className="rounded-2xl border border-brand-200 bg-white px-4 py-3 text-sm" type="file" accept="image/*" onChange={(event) => setProductForm((prev) => ({ ...prev, imageFile: event.target.files?.[0] || null }))} /></label>
+              {/* إدارة الصورة الأساسية مع المعاينة */}
+              <label className="grid gap-2 text-sm font-semibold text-stone-700">
+                <span>{isAr ? 'الصورة الأساسية' : 'Main Image'}</span>
+                <input className="rounded-2xl border border-brand-200 bg-white px-4 py-3 text-sm" type="file" accept="image/*" onChange={(event) => setProductForm((prev) => ({ ...prev, imageFile: event.target.files?.[0] || null }))} />
+                
+                {/* عرض الصورة الحالية في السيرفر لو مفيش صورة جديدة تم اختيارها */}
+                {productForm.currentImage && !productForm.imageFile && (
+                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-stone-200 bg-white p-2 w-max">
+                    <img src={productForm.currentImage} alt="" className="h-12 w-12 rounded-lg object-cover" />
+                    <span className="text-xs text-stone-500">{isAr ? 'الصورة الحالية على السيرفر' : 'Current main image'}</span>
+                  </div>
+                )}
+                {/* عرض معاينة الصورة الجديدة المرفوعة فوراً */}
+                {productForm.imageFile && (
+                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-brand-200 bg-brand-50/50 p-2 w-max">
+                    <img src={URL.createObjectURL(productForm.imageFile)} alt="" className="h-12 w-12 rounded-lg object-cover" />
+                    <span className="text-xs text-brand-700 font-medium">{isAr ? 'صورة جديدة (سيتم التحديث عند الحفظ)' : 'New image preview'}</span>
+                  </div>
+                )}
+              </label>
 
               <div className="space-y-3 rounded-xl border border-brand-100 bg-white p-3">
                 <div className="flex items-center justify-between">
@@ -337,11 +356,55 @@ export default function AdminPage() {
                 ))}
               </div>
 
-              <label className="grid gap-2 text-sm font-semibold text-stone-700">
-                <span>{isAr ? 'صور إضافية للمنتج' : 'Additional Images'}</span>
-                <input className="rounded-2xl border border-brand-200 bg-white px-4 py-3 text-sm" type="file" accept="image/*" multiple onChange={(event) => setAdditionalImages(Array.from(event.target.files || []))} />
-                {additionalImages.length > 0 && <p className="text-xs text-brand-600">{additionalImages.length} {isAr ? 'صور مختارة' : 'images selected'}</p>}
-              </label>
+              {/* 📸 قسم الصور الإضافية المطور (حذف وتعديل بالكامل) */}
+              <div className="space-y-3">
+                <label className="grid gap-2 text-sm font-semibold text-stone-700">
+                  <span>{isAr ? 'إضافة صور إضافية جديدة' : 'Add Additional Images'}</span>
+                  <input className="rounded-2xl border border-brand-200 bg-white px-4 py-3 text-sm" type="file" accept="image/*" multiple onChange={(event) => setAdditionalImages([...additionalImages, ...Array.from(event.target.files || [])])} />
+                </label>
+
+                {/* 1. عرض الصور الحالية على السيرفر مع إمكانية مسح أي صورة منها */}
+                {additionalImageUrls.length > 0 && (
+                  <div className="rounded-xl border border-stone-200 bg-stone-50 p-3">
+                    <p className="text-xs font-bold text-stone-600 mb-2">{isAr ? 'الصور الإضافية الحالية في المعرض (اضغط × للمسح):' : 'Current Gallery Images (Click × to remove):'}</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {additionalImageUrls.map((url, idx) => (
+                        <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-stone-200 group">
+                          <img src={url} alt="" className="h-full w-full object-cover" />
+                          <button 
+                            type="button" 
+                            onClick={() => setAdditionalImageUrls(additionalImageUrls.filter((_, i) => i !== idx))}
+                            className="absolute top-1 right-1 bg-rose-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow hover:bg-rose-700 transition"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. عرض الصور الجديدة المحددة التي سيتم رفعها مع إمكانية إلغاء اختيارها */}
+                {additionalImages.length > 0 && (
+                  <div className="rounded-xl border border-brand-100 bg-brand-50/30 p-3">
+                    <p className="text-xs font-bold text-brand-700 mb-2">{isAr ? 'صور جديدة تم اختيارها (سيتم حفظها):' : 'New selected images (will be saved):'}</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {additionalImages.map((file, idx) => (
+                        <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-brand-200">
+                          <img src={URL.createObjectURL(file)} alt="" className="h-full w-full object-cover" />
+                          <button 
+                            type="button" 
+                            onClick={() => setAdditionalImages(additionalImages.filter((_, i) => i !== idx))}
+                            className="absolute top-1 right-1 bg-stone-800 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow hover:bg-stone-950 transition"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="flex gap-3"><button className="button-surface bg-stone-900 text-white" type="button" onClick={handleProductSubmit}>{productForm.id ? t.admin.updateProduct : t.admin.saveProduct}</button></div>
             </div>
@@ -372,6 +435,7 @@ export default function AdminPage() {
                               sale_price: product.sale_price || '',
                               imageFile: null,
                               is_active: product.is_active,
+                              currentImage: product.image || product.image_url || '',
                             })
                             setProductColors(Array.isArray(product.colors) ? product.colors.map((color) => ({
                               color_name: color.color_name || '',
