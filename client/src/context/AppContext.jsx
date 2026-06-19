@@ -34,7 +34,9 @@ export function AppProvider({ children }) {
   const [users, setUsers] = useState([])
   const [orders, setOrders] = useState([])
 
-  // ← cartRef عشان نقدر نوصل للـ cart الحالية من جوه الـ callbacks من غير ما نضيفها في deps
+  // ← busyRef: لمنع أي request تاني قبل ما الأول يخلص (فوري من غير انتظار React)
+  const busyRef = useRef(false)
+  // ← cartRef: عشان نقدر نوصل للـ cart الحالية من جوه الـ callbacks
   const cartRef = useRef(cart)
   useEffect(() => { cartRef.current = cart }, [cart])
 
@@ -223,8 +225,10 @@ export function AppProvider({ children }) {
     return data
   }, [apiBase])
 
-  // addToCart: بتضيف منتج للسلة - بتحسب الكمية الحالية وتضيف عليها
+  // addToCart: بتضيف منتج للسلة
   const addToCart = useCallback(async (productId, selectedColor = null, delta = 1) => {
+    if (busyRef.current) return
+    busyRef.current = true
     setCartBusy(true)
     try {
       const row = await ensureCart()
@@ -245,40 +249,44 @@ export function AppProvider({ children }) {
       setCart(await response.json())
       setCartVersion((v) => v + 1)
     } finally {
+      busyRef.current = false
       setCartBusy(false)
     }
   }, [apiBase, ensureCart])
 
-  // updateCartLineQuantity: بتعدل كمية item موجود عن طريق PATCH
-  // بتستخدم cartRef عشان تجيب الـ line.id من غير ما تسبب infinite loop
- const updateCartLineQuantity = useCallback(async (productId, quantity, selectedColor = "") => {
-  const id = localStorage.getItem(CART_STORAGE_KEY)
-  if (!id) return
-  setCartBusy(true)
-  try {
-    const payload = {
-      product: productId,
-      quantity,  // ← absolute value مباشرة
-      selected_color: selectedColor || "",
-    }
-
-    const response = await fetch(`${apiBase}/carts/${id}/items/`, {
-      method: 'POST',  // ← رجّعناها POST زي الباك إند بيتوقع
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    if (!response.ok) throw new Error('qty')
-    setCart(await response.json())
-    setCartVersion((v) => v + 1)
-  } finally {
-    setCartBusy(false)
-  }
-}, [apiBase])// ← مفيش cart في الـ deps - بنستخدم cartRef بدلها
-
-  // removeCartLine: بتحذف item من السلة عن طريق DELETE
-  const removeCartLine = useCallback(async (itemId) => {
+  // updateCartLineQuantity: بتعدل كمية item موجود - بتبعت الكمية الجديدة كـ absolute value
+  const updateCartLineQuantity = useCallback(async (productId, quantity, selectedColor = "") => {
+    if (busyRef.current) return
     const id = localStorage.getItem(CART_STORAGE_KEY)
     if (!id) return
+    busyRef.current = true
+    setCartBusy(true)
+    try {
+      const payload = {
+        product: productId,
+        quantity,
+        selected_color: selectedColor || "",
+      }
+      const response = await fetch(`${apiBase}/carts/${id}/items/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (!response.ok) throw new Error('qty')
+      setCart(await response.json())
+      setCartVersion((v) => v + 1)
+    } finally {
+      busyRef.current = false
+      setCartBusy(false)
+    }
+  }, [apiBase])
+
+  // removeCartLine: بتحذف item من السلة
+  const removeCartLine = useCallback(async (itemId) => {
+    if (busyRef.current) return
+    const id = localStorage.getItem(CART_STORAGE_KEY)
+    if (!id) return
+    busyRef.current = true
     setCartBusy(true)
     try {
       const response = await fetch(`${apiBase}/carts/${id}/items/${itemId}/`, { method: 'DELETE' })
@@ -286,11 +294,12 @@ export function AppProvider({ children }) {
       setCart(await response.json())
       setCartVersion((v) => v + 1)
     } finally {
+      busyRef.current = false
       setCartBusy(false)
     }
   }, [apiBase])
 
-  // checkout: بتكمّل الطلب وتمسح السلة
+  // checkout: بتكمل الطلب وتمسح السلة
   const checkout = useCallback(async (payload) => {
     const id = localStorage.getItem(CART_STORAGE_KEY)
     if (!id) throw new Error('no cart')
