@@ -16,16 +16,8 @@ export default function PageShell({
   return (
     <div className={`relative min-h-screen text-stone-900 ${isAr ? 'font-arabic' : 'font-body'}`} dir={isAr ? 'rtl' : 'ltr'}>
       
-      {/* 📸 طبقة الخلفية المتجاوبة (Responsive Background Layer) */}
-      <div 
-        className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat
-                   {/* ⚠️ الصورة الافتراضية: للموبايل (طولية) */}
-                   bg-[url('/imgs/bg-image.jpg.jpeg')] 
-                   
-                   {/* ⚠️ الصورة عند الشاشات المتوسطة والكبيرة (md:): للاب (عرضية) */}
-                   md:bg-[url('/imgs/mo.jpeg')]
-        "
-      />
+      {/* 📸 طبقة الخلفية المتجاوبة (سطر واحد نظيف ومباشر) */}
+      <div className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat bg-[url('/imgs/bg-image.jpg.jpeg')] md:bg-[url('/imgs/mo.jpeg')]" />
 
       {/* محتوى الموقع الأساسي */}
       <div className={`mx-auto flex ${maxWidth} flex-col gap-8 px-4 pb-16 pt-6 sm:px-6 lg:px-8 lg:pt-8`}>
