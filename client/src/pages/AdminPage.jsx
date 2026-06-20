@@ -11,7 +11,6 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   
-  // الفورم الأساسية مع إضافة حقل للصورة الحالية
   const [productForm, setProductForm] = useState({ 
     id: null, category: '', name: '', description: '', 
     price: '', sale_price: '', imageFile: null, is_active: true,
@@ -19,10 +18,9 @@ export default function AdminPage() {
   })
   const [categoryForm, setCategoryForm] = useState({ id: null, name: '' })
   
-  // State للألوان والصور الإضافية
-  const [productColors, setProductColors] = useState([]) // [{name: '', code: '#000000'}]
-  const [additionalImages, setAdditionalImages] = useState([]) // مصفوفة ملفات الـ Files الجديدة
-  const [additionalImageUrls, setAdditionalImageUrls] = useState([]) // مصفوفة روابط الصور القديمة من الـ Backend
+  const [productColors, setProductColors] = useState([]) 
+  const [additionalImages, setAdditionalImages] = useState([]) 
+  const [additionalImageUrls, setAdditionalImageUrls] = useState([]) 
 
   const [deleteTarget, setDeleteTarget] = useState(null)
 
@@ -76,7 +74,6 @@ export default function AdminPage() {
   
   const resetCategoryForm = () => setCategoryForm({ id: null, name: '' })
 
-  // دوال التحكم في الألوان
   const addColorField = () => setProductColors([...productColors, { color_name: '', color_code: '#000000' }])
   const removeColorField = (index) => setProductColors(productColors.filter((_, i) => i !== index))
   const updateColorField = (index, field, value) => {
@@ -99,12 +96,10 @@ export default function AdminPage() {
 
       if (productForm.imageFile) formData.append('image', productForm.imageFile)
 
-      // رفع الملفات الجديدة
       additionalImages.forEach((file) => {
         formData.append('additional_images', file)
       })
 
-      // عند التعديل: نرسل دائماً لستة الروابط المتبقية حتى لو أصبحت فارغة ليعرف الباكيند ما تم حذفه
       if (productForm.id) {
         formData.append('additional_images_data', JSON.stringify(additionalImageUrls))
       }
@@ -210,18 +205,21 @@ export default function AdminPage() {
         </div>
       </header>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => <div key={stat.label} className="card-surface p-5"><p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-400">{stat.label}</p><p className="mt-2 font-display text-3xl text-stone-900">{stat.value}</p></div>)}
+      <section className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => <div key={stat.label} className="card-surface p-4 sm:p-5"><p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-stone-400">{stat.label}</p><p className="mt-1 sm:mt-2 font-display text-2xl sm:text-3xl text-stone-900">{stat.value}</p></div>)}
       </section>
 
       {error ? <p className="rounded-card border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</p> : null}
 
-      <section className="space-y-4 rounded-page border border-white/40 bg-white/80 p-6 shadow-soft backdrop-blur-sm">
+      {/* 📦 قسم الطلبات المطور والمحسن للموبايل والكمبيوتر */}
+      <section className="space-y-4 rounded-page border border-white/40 bg-white/80 p-4 sm:p-6 shadow-soft backdrop-blur-sm">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="font-display text-2xl text-stone-900">{t.admin.orders}</h2>
+          <h2 className="font-display text-xl sm:text-2xl text-stone-900">{t.admin.orders}</h2>
           <span className="rounded-full border border-brand-100 bg-white px-3 py-1 text-[11px] font-semibold text-stone-500">{orders.length}</span>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-brand-100">
+
+        {/* 🖥️ عرض لابتوب وشاشات كبيرة: جدول متكامل */}
+        <div className="hidden md:block overflow-hidden rounded-2xl border border-brand-100">
           <table className="min-w-full border-collapse text-sm">
             <thead className="bg-sand-50 text-left text-xs uppercase tracking-[0.2em] text-stone-500">
               <tr>
@@ -242,13 +240,11 @@ export default function AdminPage() {
                     <div className="font-semibold text-stone-900">{order.customer_name}</div>
                     <div className="text-xs text-stone-500">{order.customer_phone}</div>
                   </td>
-                  
                   <td className="px-4 py-3 text-stone-600">
                     <div className="space-y-2">
                       {order.items && order.items.map((item, index) => {
                         let colorStyle = '#ffffff'; 
                         let colorTextToShow = '';
-
                         if (item.selected_color) {
                           if (typeof item.selected_color === 'object') {
                             colorStyle = item.selected_color.color_code || item.selected_color.code || '#ffffff';
@@ -256,10 +252,8 @@ export default function AdminPage() {
                           } else {
                             const colorStr = String(item.selected_color);
                             colorTextToShow = colorStr;
-
                             const currentProduct = products.find(p => p.name === item.product_name);
                             const matchedColorObj = currentProduct?.colors?.find(c => String(c.color_name) === colorStr);
-
                             if (matchedColorObj?.color_code) {
                               colorStyle = matchedColorObj.color_code;
                             } else if (/^[0-9A-F]{6}$/i.test(colorStr)) {
@@ -269,34 +263,23 @@ export default function AdminPage() {
                             }
                           }
                         }
-
                         return (
                           <div key={index} className="flex items-center gap-2 text-xs text-stone-800">
                             <span className="font-medium text-stone-900">{item.product_name}</span>
                             <span className="text-stone-400 font-sans">({item.quantity}x)</span>
-                            
                             {item.selected_color ? (
                               <div className="flex items-center gap-1.5">
-                                <span 
-                                  className="inline-block h-4 w-4 rounded-full border border-stone-300 shadow-sm transition-transform hover:scale-110"
-                                  style={{ backgroundColor: colorStyle }}
-                                  title={`درجة: ${colorTextToShow}`}
-                                />
-                                <span className="text-[10px] bg-stone-100 text-stone-600 px-1.5 py-0.5 rounded font-mono">
-                                  {colorTextToShow}
-                                </span>
+                                <span className="inline-block h-4 w-4 rounded-full border border-stone-300 shadow-sm" style={{ backgroundColor: colorStyle }} title={`درجة: ${colorTextToShow}`} />
+                                <span className="text-[10px] bg-stone-100 text-stone-600 px-1.5 py-0.5 rounded font-mono">{colorTextToShow}</span>
                               </div>
                             ) : (
-                              <span className="text-[10px] text-stone-400 italic">
-                                {isAr ? 'بدون لون' : 'No color'}
-                              </span>
+                              <span className="text-[10px] text-stone-400 italic">{isAr ? 'بدون لون' : 'No color'}</span>
                             )}
                           </div>
                         );
                       })}
                     </div>
                   </td>
-
                   <td className="px-4 py-3 text-stone-600">{order.status}</td>
                   <td className="px-4 py-3 font-semibold text-stone-900">{formatPrice(order.total, isAr)}</td>
                   <td className="px-4 py-3 text-stone-500">{new Date(order.created_at).toLocaleString(isAr ? 'ar-EG' : 'en-EG')}</td>
@@ -308,10 +291,86 @@ export default function AdminPage() {
             </tbody>
           </table>
         </div>
+
+        {/* 📱 عرض الفون (الموبايل): كروت ذكية وسهلة للقراءة والتجهيز السريع */}
+        <div className="block md:hidden space-y-3">
+          {orders.map((order) => (
+            <div key={order.id} className="rounded-xl border border-brand-100 bg-white/90 p-4 shadow-sm space-y-3">
+              {/* السطر الأول: رقم الأوردر والتاريخ والحالة */}
+              <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                <div>
+                  <span className="text-xs text-stone-400 font-mono">#</span>
+                  <span className="font-bold text-stone-900">{order.id}</span>
+                </div>
+                <div className="text-[11px] text-stone-500">{new Date(order.created_at).toLocaleDateString(isAr ? 'ar-EG' : 'en-EG')}</div>
+                <span className="rounded bg-sand-100 px-2 py-0.5 text-xs font-medium text-stone-700">{order.status}</span>
+              </div>
+
+              {/* بيانات العميل وسهولة الاتصال */}
+              <div className="text-sm">
+                <div className="font-bold text-stone-900">{order.customer_name}</div>
+                <div className="text-xs text-stone-600 font-mono mt-0.5">{order.customer_phone}</div>
+              </div>
+
+              {/* لستة المنتجات المطلوبة مع الألوان */}
+              <div className="rounded-lg bg-stone-50/70 p-2.5 space-y-2">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-stone-400">{isAr ? 'الطلبات المرفقة:' : 'Items:'}</div>
+                {order.items && order.items.map((item, index) => {
+                  let colorStyle = '#ffffff'; 
+                  let colorTextToShow = '';
+                  if (item.selected_color) {
+                    if (typeof item.selected_color === 'object') {
+                      colorStyle = item.selected_color.color_code || item.selected_color.code || '#ffffff';
+                      colorTextToShow = item.selected_color.color_name || colorStyle;
+                    } else {
+                      const colorStr = String(item.selected_color);
+                      colorTextToShow = colorStr;
+                      const currentProduct = products.find(p => p.name === item.product_name);
+                      const matchedColorObj = currentProduct?.colors?.find(c => String(c.color_name) === colorStr);
+                      if (matchedColorObj?.color_code) {
+                        colorStyle = matchedColorObj.color_code;
+                      } else if (/^[0-9A-F]{6}$/i.test(colorStr)) {
+                        colorStyle = `#${colorStr}`;
+                      } else {
+                        colorStyle = colorStr; 
+                      }
+                    }
+                  }
+                  return (
+                    <div key={index} className="flex flex-wrap items-center gap-1.5 text-xs text-stone-800 border-b border-stone-100/50 pb-1.5 last:border-0 last:pb-0">
+                      <span className="font-bold text-stone-900">{item.product_name}</span>
+                      <span className="text-brand-600 font-sans font-bold">({item.quantity}x)</span>
+                      {item.selected_color ? (
+                        <div className="flex items-center gap-1">
+                          <span className="inline-block h-3.5 w-3.5 rounded-full border border-stone-300 shadow-sm" style={{ backgroundColor: colorStyle }} />
+                          <span className="text-[10px] bg-white border border-stone-200 text-stone-600 px-1 rounded font-mono">{colorTextToShow}</span>
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-stone-400 italic">{isAr ? 'بدون لون' : 'No color'}</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* الإجمالي وزر الحذف */}
+              <div className="flex items-center justify-between pt-1">
+                <div>
+                  <span className="text-xs text-stone-500">{isAr ? 'الإجمالي: ' : 'Total: '}</span>
+                  <span className="font-bold text-stone-900">{formatPrice(order.total, isAr)}</span>
+                </div>
+                <button className="rounded-xl border border-rose-100 bg-rose-50/50 px-3 py-1.5 text-xs font-semibold text-rose-600 active:bg-rose-100 transition" type="button" onClick={() => deleteOrder(order.id)}>
+                  {t.admin.delete}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
+      {/* باقي الـ Layout الخاص بالمنتجات والأقسام والمستخدمين مضبوط و ريسبونسيف */}
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <section className="space-y-6 rounded-page border border-white/40 bg-white/80 p-6 shadow-soft backdrop-blur-sm">
+        <section className="space-y-6 rounded-page border border-white/40 bg-white/80 p-4 sm:p-6 shadow-soft backdrop-blur-sm">
           <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-display text-2xl text-stone-900">{t.admin.products}</h2><button className="button-surface border border-brand-200 bg-white text-stone-700" type="button" onClick={resetProductForm}>{t.admin.newProduct}</button></div>
           <fieldset className="rounded-2xl border border-brand-100 bg-sand-50/70 p-4">
             <legend className="px-2 text-sm font-semibold text-stone-700">{isAr ? 'بيانات المنتج' : 'Product details'}</legend>
@@ -321,19 +380,15 @@ export default function AdminPage() {
               <label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'الوصف' : 'Description'}</span><textarea className="input-surface min-h-[110px]" value={productForm.description} onChange={(event) => setProductForm((prev) => ({ ...prev, description: event.target.value }))} /></label>
               <div className="grid gap-4 sm:grid-cols-3"><label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'السعر' : 'Price'}</span><input className="input-surface" type="number" step="0.01" value={productForm.price} onChange={(event) => setProductForm((prev) => ({ ...prev, price: event.target.value }))} /></label><label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'سعر التخفيض' : 'Sale price'}</span><input className="input-surface" type="number" step="0.01" value={productForm.sale_price} onChange={(event) => setProductForm((prev) => ({ ...prev, sale_price: event.target.value }))} /></label><label className="grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'نشط' : 'Active'}</span><input className="h-11 rounded-2xl border border-brand-200 bg-white px-4" type="checkbox" checked={productForm.is_active} onChange={(event) => setProductForm((prev) => ({ ...prev, is_active: event.target.checked }))} /></label></div>
               
-              {/* إدارة الصورة الأساسية مع المعاينة */}
               <label className="grid gap-2 text-sm font-semibold text-stone-700">
                 <span>{isAr ? 'الصورة الأساسية' : 'Main Image'}</span>
                 <input className="rounded-2xl border border-brand-200 bg-white px-4 py-3 text-sm" type="file" accept="image/*" onChange={(event) => setProductForm((prev) => ({ ...prev, imageFile: event.target.files?.[0] || null }))} />
-                
-                {/* عرض الصورة الحالية في السيرفر لو مفيش صورة جديدة تم اختيارها */}
                 {productForm.currentImage && !productForm.imageFile && (
                   <div className="mt-1 flex items-center gap-2 rounded-xl border border-stone-200 bg-white p-2 w-max">
                     <img src={productForm.currentImage} alt="" className="h-12 w-12 rounded-lg object-cover" />
                     <span className="text-xs text-stone-500">{isAr ? 'الصورة الحالية على السيرفر' : 'Current main image'}</span>
                   </div>
                 )}
-                {/* عرض معاينة الصورة الجديدة المرفوعة فوراً */}
                 {productForm.imageFile && (
                   <div className="mt-1 flex items-center gap-2 rounded-xl border border-brand-200 bg-brand-50/50 p-2 w-max">
                     <img src={URL.createObjectURL(productForm.imageFile)} alt="" className="h-12 w-12 rounded-lg object-cover" />
@@ -356,14 +411,12 @@ export default function AdminPage() {
                 ))}
               </div>
 
-              {/* 📸 قسم الصور الإضافية المطور (حذف وتعديل بالكامل) */}
               <div className="space-y-3">
                 <label className="grid gap-2 text-sm font-semibold text-stone-700">
                   <span>{isAr ? 'إضافة صور إضافية جديدة' : 'Add Additional Images'}</span>
                   <input className="rounded-2xl border border-brand-200 bg-white px-4 py-3 text-sm" type="file" accept="image/*" multiple onChange={(event) => setAdditionalImages([...additionalImages, ...Array.from(event.target.files || [])])} />
                 </label>
 
-                {/* 1. عرض الصور الحالية على السيرفر مع إمكانية مسح أي صورة منها */}
                 {additionalImageUrls.length > 0 && (
                   <div className="rounded-xl border border-stone-200 bg-stone-50 p-3">
                     <p className="text-xs font-bold text-stone-600 mb-2">{isAr ? 'الصور الإضافية الحالية في المعرض (اضغط × للمسح):' : 'Current Gallery Images (Click × to remove):'}</p>
@@ -371,20 +424,13 @@ export default function AdminPage() {
                       {additionalImageUrls.map((url, idx) => (
                         <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-stone-200 group">
                           <img src={url} alt="" className="h-full w-full object-cover" />
-                          <button 
-                            type="button" 
-                            onClick={() => setAdditionalImageUrls(additionalImageUrls.filter((_, i) => i !== idx))}
-                            className="absolute top-1 right-1 bg-rose-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow hover:bg-rose-700 transition"
-                          >
-                            ×
-                          </button>
+                          <button type="button" onClick={() => setAdditionalImageUrls(additionalImageUrls.filter((_, i) => i !== idx))} className="absolute top-1 right-1 bg-rose-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow hover:bg-rose-700 transition">×</button>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* 2. عرض الصور الجديدة المحددة التي سيتم رفعها مع إمكانية إلغاء اختيارها */}
                 {additionalImages.length > 0 && (
                   <div className="rounded-xl border border-brand-100 bg-brand-50/30 p-3">
                     <p className="text-xs font-bold text-brand-700 mb-2">{isAr ? 'صور جديدة تم اختيارها (سيتم حفظها):' : 'New selected images (will be saved):'}</p>
@@ -392,13 +438,7 @@ export default function AdminPage() {
                       {additionalImages.map((file, idx) => (
                         <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-brand-200">
                           <img src={URL.createObjectURL(file)} alt="" className="h-full w-full object-cover" />
-                          <button 
-                            type="button" 
-                            onClick={() => setAdditionalImages(additionalImages.filter((_, i) => i !== idx))}
-                            className="absolute top-1 right-1 bg-stone-800 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow hover:bg-stone-950 transition"
-                          >
-                            ×
-                          </button>
+                          <button type="button" onClick={() => setAdditionalImages(additionalImages.filter((_, i) => i !== idx))} className="absolute top-1 right-1 bg-stone-800 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow hover:bg-stone-950 transition">×</button>
                         </div>
                       ))}
                     </div>
@@ -410,7 +450,7 @@ export default function AdminPage() {
             </div>
           </fieldset>
 
-          <div className="overflow-hidden rounded-2xl border border-brand-100">
+          <div className="overflow-x-auto rounded-2xl border border-brand-100">
             <table className="min-w-full border-collapse text-sm">
               <thead className="bg-sand-50 text-left text-xs uppercase tracking-[0.2em] text-stone-500"><tr><th className="px-4 py-3">Name</th><th className="px-4 py-3">Category</th><th className="px-4 py-3">Active</th><th className="px-4 py-3">Price</th><th className="px-4 py-3">Actions</th></tr></thead>
               <tbody>
@@ -460,14 +500,14 @@ export default function AdminPage() {
         </section>
 
         <div className="space-y-6">
-          <section className="space-y-6 rounded-page border border-white/40 bg-white/80 p-6 shadow-soft backdrop-blur-sm">
+          <section className="space-y-6 rounded-page border border-white/40 bg-white/80 p-4 sm:p-6 shadow-soft backdrop-blur-sm">
             <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-display text-2xl text-stone-900">{t.admin.categories}</h2><button className="button-surface border border-brand-200 bg-white text-stone-700" type="button" onClick={resetCategoryForm}>{t.admin.newCategory}</button></div>
             <fieldset className="rounded-2xl border border-brand-100 bg-sand-50/70 p-4">
               <legend className="px-2 text-sm font-semibold text-stone-700">{isAr ? 'بيانات القسم' : 'Category details'}</legend>
               <label className="mt-4 grid gap-2 text-sm font-semibold text-stone-700"><span>{isAr ? 'اسم القسم' : 'Category name'}</span><input className="input-surface" value={categoryForm.name} onChange={(event) => setCategoryForm((prev) => ({ ...prev, name: event.target.value }))} /></label>
               <button className="mt-4 button-surface bg-stone-900 text-white" type="button" onClick={handleCategorySubmit}>{categoryForm.id ? t.admin.updateCategory : t.admin.saveCategory}</button>
             </fieldset>
-            <div className="overflow-hidden rounded-2xl border border-brand-100">
+            <div className="overflow-x-auto rounded-2xl border border-brand-100">
               <table className="min-w-full border-collapse text-sm">
                 <thead className="bg-sand-50 text-left text-xs uppercase tracking-[0.2em] text-stone-500"><tr><th className="px-4 py-3">Name</th><th className="px-4 py-3">Actions</th></tr></thead>
                 <tbody>
@@ -482,9 +522,9 @@ export default function AdminPage() {
             </div>
           </section>
 
-          <section className="space-y-4 rounded-page border border-white/40 bg-white/80 p-6 shadow-soft backdrop-blur-sm">
+          <section className="space-y-4 rounded-page border border-white/40 bg-white/80 p-4 sm:p-6 shadow-soft backdrop-blur-sm">
             <h2 className="font-display text-2xl text-stone-900">{t.admin.users}</h2>
-            <div className="overflow-hidden rounded-2xl border border-brand-100">
+            <div className="overflow-x-auto rounded-2xl border border-brand-100">
               <table className="min-w-full border-collapse text-sm">
                 <thead className="bg-sand-50 text-left text-xs uppercase tracking-[0.2em] text-stone-500"><tr><th className="px-4 py-3">User</th><th className="px-4 py-3">Role</th><th className="px-4 py-3">Actions</th></tr></thead>
                 <tbody>
