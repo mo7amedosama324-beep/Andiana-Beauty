@@ -23,6 +23,9 @@ export default function AdminPage() {
   const [additionalImageUrls, setAdditionalImageUrls] = useState([]) 
 
   const [deleteTarget, setDeleteTarget] = useState(null)
+  
+  // 🔍 حالة جديدة لتخزين الأوردر المراد عرض تفاصيله بالكامل
+  const [viewOrder, setViewOrder] = useState(null)
 
   const stats = useMemo(() => ([
     { label: t.admin.orders, value: orders.length },
@@ -180,6 +183,7 @@ export default function AdminPage() {
 
       if (response.ok) {
         pushToast({ type: 'success', message: isAr ? 'تم حذف الأوردر بنجاح' : 'Order deleted successfully' })
+        if (viewOrder?.id === orderId) setViewOrder(null)
         refreshAdminData()
       } else {
         setError(isAr ? 'فشل الحذف، تأكد من صلاحيات الإدمن' : 'Delete failed, check admin permissions')
@@ -216,21 +220,21 @@ export default function AdminPage() {
 
       {error ? <p className="rounded-card border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600 break-words w-full">{error}</p> : null}
 
-      {/* 📦 قسم الطلبات - متجاوب تماماً وبدون أي سحب يمين/شمال */}
+      {/* 📦 قسم الطلبات */}
       <section className="space-y-4 rounded-page border border-white/40 bg-white/80 p-4 sm:p-6 shadow-soft backdrop-blur-sm w-full max-w-full overflow-hidden">
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-display text-xl sm:text-2xl text-stone-900">{t.admin.orders}</h2>
           <span className="rounded-full border border-brand-100 bg-white px-3 py-1 text-[11px] font-semibold text-stone-500 whitespace-nowrap">{orders.length}</span>
         </div>
 
-        {/* 🖥️ شاشات الكمبيوتر والتابلت: جدول بـ Scroll داخلي معزول لو الشاشة صغرت */}
+        {/* 🖥️ شاشات الكمبيوتر والتابلت */}
         <div className="hidden md:block overflow-x-auto w-full rounded-2xl border border-brand-100">
           <table className="min-w-full border-collapse text-sm table-auto">
             <thead className="bg-sand-50 text-left text-xs uppercase tracking-[0.2em] text-stone-500">
               <tr>
                 <th className="px-4 py-3">#</th>
                 <th className="px-4 py-3">{isAr ? 'العميل' : 'Customer'}</th>
-                <th className="px-4 py-3">{isAr ? 'المنتجات واللون' : 'Products & Color'}</th>
+                <th className="px-4 py-3">{isAr ? 'المنتجات' : 'Products'}</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Total</th>
                 <th className="px-4 py-3">Date</th>
@@ -246,50 +250,20 @@ export default function AdminPage() {
                     <div className="text-xs text-stone-500 font-mono">{order.customer_phone}</div>
                   </td>
                   <td className="px-4 py-3 text-stone-600">
-                    <div className="space-y-2">
-                      {order.items && order.items.map((item, index) => {
-                        let colorStyle = '#ffffff'; 
-                        let colorTextToShow = '';
-                        if (item.selected_color) {
-                          if (typeof item.selected_color === 'object') {
-                            colorStyle = item.selected_color.color_code || item.selected_color.code || '#ffffff';
-                            colorTextToShow = item.selected_color.color_name || colorStyle;
-                          } else {
-                            const colorStr = String(item.selected_color);
-                            colorTextToShow = colorStr;
-                            const currentProduct = products.find(p => p.name === item.product_name);
-                            const matchedColorObj = currentProduct?.colors?.find(c => String(c.color_name) === colorStr);
-                            if (matchedColorObj?.color_code) {
-                              colorStyle = matchedColorObj.color_code;
-                            } else if (/^[0-9A-F]{6}$/i.test(colorStr)) {
-                              colorStyle = `#${colorStr}`;
-                            } else {
-                              colorStyle = colorStr; 
-                            }
-                          }
-                        }
-                        return (
-                          <div key={index} className="flex items-center gap-2 text-xs text-stone-800">
-                            <span className="font-medium text-stone-900 whitespace-nowrap">{item.product_name}</span>
-                            <span className="text-stone-400 font-sans">({item.quantity}x)</span>
-                            {item.selected_color ? (
-                              <div className="flex items-center gap-1.5 whitespace-nowrap">
-                                <span className="inline-block h-4 w-4 rounded-full border border-stone-300 shadow-sm" style={{ backgroundColor: colorStyle }} title={`درجة: ${colorTextToShow}`} />
-                                <span className="text-[10px] bg-stone-100 text-stone-600 px-1.5 py-0.5 rounded font-mono">{colorTextToShow}</span>
-                              </div>
-                            ) : (
-                              <span className="text-[10px] text-stone-400 italic whitespace-nowrap">{isAr ? 'بدون لون' : 'No color'}</span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                    <span className="text-xs font-medium bg-stone-100 text-stone-700 px-2 py-1 rounded">
+                      {order.items?.length || 0} {isAr ? 'منتجات' : 'items'}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-stone-600 whitespace-nowrap">{order.status}</td>
                   <td className="px-4 py-3 font-semibold text-stone-900 whitespace-nowrap">{formatPrice(order.total, isAr)}</td>
                   <td className="px-4 py-3 text-stone-500 whitespace-nowrap">{new Date(order.created_at).toLocaleString(isAr ? 'ar-EG' : 'en-EG')}</td>
                   <td className="px-4 py-3">
-                    <button className="button-surface border border-rose-200 bg-white text-rose-600 whitespace-nowrap" type="button" onClick={() => deleteOrder(order.id)}>{t.admin.delete}</button>
+                    <div className="flex gap-2">
+                      <button className="button-surface border border-brand-300 bg-white text-stone-800 whitespace-nowrap" type="button" onClick={() => setViewOrder(order)}>
+                        {isAr ? 'عرض التفاصيل' : 'View Details'}
+                      </button>
+                      <button className="button-surface border border-rose-200 bg-white text-rose-600 whitespace-nowrap" type="button" onClick={() => deleteOrder(order.id)}>{t.admin.delete}</button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -297,7 +271,7 @@ export default function AdminPage() {
           </table>
         </div>
 
-        {/* 📱 شاشات الموبايل: كروت منظمة ومحكومة العرض تماماً لمنع أي سحب خارجي */}
+        {/* 📱 شاشات الموبايل */}
         <div className="block md:hidden space-y-3">
           {orders.map((order) => (
             <div key={order.id} className="rounded-xl border border-brand-100 bg-white/95 p-4 shadow-sm space-y-3 w-full overflow-hidden">
@@ -306,7 +280,6 @@ export default function AdminPage() {
                   <span className="text-xs text-stone-400 font-mono">#</span>
                   <span className="font-bold text-stone-900 font-mono">{order.id}</span>
                 </div>
-                <div className="text-[10px] text-stone-500 font-mono truncate">{new Date(order.created_at).toLocaleDateString(isAr ? 'ar-EG' : 'en-EG')}</div>
                 <span className="rounded bg-sand-100 px-2 py-0.5 text-[11px] font-medium text-stone-700 whitespace-nowrap">{order.status}</span>
               </div>
 
@@ -315,61 +288,26 @@ export default function AdminPage() {
                 <div className="text-xs text-stone-500 font-mono mt-0.5 break-all">{order.customer_phone}</div>
               </div>
 
-              <div className="rounded-lg bg-stone-50 p-2.5 space-y-2.5 w-full">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-stone-400">{isAr ? 'الطلبات المرفقة:' : 'Items:'}</div>
-                {order.items && order.items.map((item, index) => {
-                  let colorStyle = '#ffffff'; 
-                  let colorTextToShow = '';
-                  if (item.selected_color) {
-                    if (typeof item.selected_color === 'object') {
-                      colorStyle = item.selected_color.color_code || item.selected_color.code || '#ffffff';
-                      colorTextToShow = item.selected_color.color_name || colorStyle;
-                    } else {
-                      const colorStr = String(item.selected_color);
-                      colorTextToShow = colorStr;
-                      const currentProduct = products.find(p => p.name === item.product_name);
-                      const matchedColorObj = currentProduct?.colors?.find(c => String(c.color_name) === colorStr);
-                      if (matchedColorObj?.color_code) {
-                        colorStyle = matchedColorObj.color_code;
-                      } else if (/^[0-9A-F]{6}$/i.test(colorStr)) {
-                        colorStyle = `#${colorStr}`;
-                      } else {
-                        colorStyle = colorStr; 
-                      }
-                    }
-                  }
-                  return (
-                    <div key={index} className="flex flex-wrap items-center gap-1.5 text-xs text-stone-800 border-b border-stone-100 pb-2 last:border-0 last:pb-0 w-full">
-                      <span className="font-semibold text-stone-900 break-words min-w-0 max-w-full">{item.product_name}</span>
-                      <span className="text-brand-700 font-sans font-bold">({item.quantity}x)</span>
-                      {item.selected_color ? (
-                        <div className="flex items-center gap-1 shrink-0">
-                          <span className="inline-block h-3.5 w-3.5 rounded-full border border-stone-300 shadow-xs" style={{ backgroundColor: colorStyle }} />
-                          <span className="text-[10px] bg-white border border-stone-200 text-stone-600 px-1 rounded font-mono truncate max-w-[80px]">{colorTextToShow}</span>
-                        </div>
-                      ) : (
-                        <span className="text-[10px] text-stone-400 italic shrink-0">{isAr ? 'بدون لون' : 'No color'}</span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="flex items-center justify-between pt-1 gap-2">
-                <div className="min-w-0">
+              <div className="flex items-center justify-between pt-1 gap-2 border-t border-stone-100/80 pt-2">
+                <div>
                   <span className="text-xs text-stone-500">{isAr ? 'الإجمالي: ' : 'Total: '}</span>
-                  <span className="font-bold text-stone-900 font-mono truncate block sm:inline">{formatPrice(order.total, isAr)}</span>
+                  <span className="font-bold text-stone-900 font-mono block">{formatPrice(order.total, isAr)}</span>
                 </div>
-                <button className="rounded-xl border border-rose-100 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-600 active:bg-rose-100 transition whitespace-nowrap shrink-0" type="button" onClick={() => deleteOrder(order.id)}>
-                  {t.admin.delete}
-                </button>
+                <div className="flex gap-1.5">
+                  <button className="rounded-xl border border-brand-200 bg-stone-50 px-3 py-1.5 text-xs font-semibold text-stone-800 active:bg-stone-100 transition whitespace-nowrap" type="button" onClick={() => setViewOrder(order)}>
+                    {isAr ? 'عرض' : 'View'}
+                  </button>
+                  <button className="rounded-xl border border-rose-100 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-600 active:bg-rose-100 transition whitespace-nowrap" type="button" onClick={() => deleteOrder(order.id)}>
+                    {t.admin.delete}
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* 🛠️ باقي الحقول وأقسام المنتجات والتحكم مع معالجة الـ Overflow */}
+      {/* 🛠️ باقي الحقول وأقسام المنتجات والتحكم */}
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr] w-full max-w-full">
         <section className="space-y-6 rounded-page border border-white/40 bg-white/80 p-4 sm:p-6 shadow-soft backdrop-blur-sm w-full max-w-full overflow-hidden">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -390,7 +328,6 @@ export default function AdminPage() {
                 <label className="grid gap-2 text-sm font-semibold text-stone-700 w-full"><span>{isAr ? 'نشط' : 'Active'}</span><input className="h-11 rounded-2xl border border-brand-200 bg-white px-4" type="checkbox" checked={productForm.is_active} onChange={(event) => setProductForm((prev) => ({ ...prev, is_active: event.target.checked }))} /></label>
               </div>
               
-              {/* تعديل حقل اختيار الملف الأساسي وإلغاء الـ w-max المسبب للمشاكل */}
               <label className="grid gap-2 text-sm font-semibold text-stone-700 w-full">
                 <span>{isAr ? 'الصورة الأساسية' : 'Main Image'}</span>
                 <input className="rounded-2xl border border-brand-200 bg-white px-4 py-3 text-sm w-full max-w-full" type="file" accept="image/*" onChange={(event) => setProductForm((prev) => ({ ...prev, imageFile: event.target.files?.[0] || null }))} />
@@ -423,14 +360,12 @@ export default function AdminPage() {
                 ))}
               </div>
 
-              {/* 📸 قسم الصور الإضافية المطور لمنع اتساع الشاشة أفقياً */}
               <div className="space-y-3 w-full">
                 <label className="grid gap-2 text-sm font-semibold text-stone-700 w-full">
                   <span>{isAr ? 'إضافة صور إضافية جديدة' : 'Add Additional Images'}</span>
                   <input className="rounded-2xl border border-brand-200 bg-white px-4 py-3 text-sm w-full max-w-full" type="file" accept="image/*" multiple onChange={(event) => setAdditionalImages([...additionalImages, ...Array.from(event.target.files || [])])} />
                 </label>
 
-                {/* كروت المعاينة تفتح عمودين عالموبايل لمنع الحشر والتمدد */}
                 {additionalImageUrls.length > 0 && (
                   <div className="rounded-xl border border-stone-200 bg-stone-50 p-3 w-full">
                     <p className="text-xs font-bold text-stone-600 mb-2 break-words">{isAr ? 'الصور الإضافية الحالية في المعرض (اضغط × للمسح):' : 'Current Gallery Images (Click × to remove):'}</p>
@@ -464,7 +399,6 @@ export default function AdminPage() {
             </div>
           </fieldset>
 
-          {/* تغليف جداول الـ Desktop المتبقية بـ overflow معزول لحماية المحاذاة */}
           <div className="overflow-x-auto w-full rounded-2xl border border-brand-100">
             <table className="min-w-full border-collapse text-sm table-auto">
               <thead className="bg-sand-50 text-left text-xs uppercase tracking-[0.2em] text-stone-500"><tr><th className="px-4 py-3">Name</th><th className="px-4 py-3">Category</th><th className="px-4 py-3">Active</th><th className="px-4 py-3">Price</th><th className="px-4 py-3">Actions</th></tr></thead>
@@ -561,6 +495,139 @@ export default function AdminPage() {
           </section>
         </div>
       </div>
+
+      {/* 🌟 نافذة تفاصيل الأوردر المطور بالكامل (شغل نظيف وعلى مية بيضا) */}
+      {viewOrder && (
+        <div className="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in" onClick={() => setViewOrder(null)}>
+          <div className="bg-white rounded-page max-w-2xl w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 shadow-xl border border-stone-100 space-y-6 text-right" style={{ direction: isAr ? 'rtl' : 'ltr' }} onClick={(e) => e.stopPropagation()}>
+            
+            {/* الهيدر */}
+            <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+              <div>
+                <h3 className="font-display text-xl font-bold text-stone-900">
+                  {isAr ? `تفاصيل الطلب #${viewOrder.id}` : `Order Details #${viewOrder.id}`}
+                </h3>
+                <p className="text-xs text-stone-400 font-mono mt-1">
+                  {new Date(viewOrder.created_at).toLocaleString(isAr ? 'ar-EG' : 'en-EG')}
+                </p>
+              </div>
+              <button type="button" className="text-stone-400 hover:text-stone-900 font-bold text-2xl p-1 transition" onClick={() => setViewOrder(null)}>×</button>
+            </div>
+
+            {/* بيانات العميل وسير الأوردر */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-sand-50/60 rounded-xl p-4 text-sm">
+              <div className="space-y-1">
+                <span className="text-xs text-stone-400 block">{isAr ? 'اسم العميل:' : 'Customer Name:'}</span>
+                <span className="font-bold text-stone-800 block break-words">{viewOrder.customer_name}</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs text-stone-400 block">{isAr ? 'رقم الهاتف:' : 'Phone Number:'}</span>
+                <span className="font-bold text-stone-800 block font-mono break-all">{viewOrder.customer_phone}</span>
+              </div>
+              <div className="space-y-1 sm:col-span-2 border-t border-stone-200/50 pt-2 mt-1 flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-stone-400 block mb-1">{isAr ? 'حالة الطلب الحالية:' : 'Current Status:'}</span>
+                  <span className="inline-block rounded-full bg-brand-100 text-brand-800 px-3 py-0.5 text-xs font-semibold">{viewOrder.status}</span>
+                </div>
+                <div className="text-left font-mono">
+                  <span className="text-xs text-stone-400 block mb-1">{isAr ? 'إجمالي الحساب:' : 'Grand Total:'}</span>
+                  <span className="text-base font-bold text-stone-900">{formatPrice(viewOrder.total, isAr)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* المنتجات داخل الأوردر (بالصور والتفاصيل) */}
+            <div className="space-y-3">
+              <h4 className="font-display font-bold text-sm text-stone-500 uppercase tracking-wider">
+                {isAr ? 'المنتجات المطلوبة' : 'Items Ordered'}
+              </h4>
+              <div className="space-y-2.5">
+                {viewOrder.items && viewOrder.items.map((item, index) => {
+                  // جلب الصورة بشكل ذكي كـ fallback لو مش مبعوتة في الـ items مباشرة
+                  const matchedProduct = products.find(p => p.name === item.product_name);
+                  const finalImageUrl = item.product_image || item.image || matchedProduct?.image || matchedProduct?.image_url;
+
+                  let colorStyle = '#ffffff'; 
+                  let colorTextToShow = '';
+                  if (item.selected_color) {
+                    if (typeof item.selected_color === 'object') {
+                      colorStyle = item.selected_color.color_code || item.selected_color.code || '#ffffff';
+                      colorTextToShow = item.selected_color.color_name || colorStyle;
+                    } else {
+                      const colorStr = String(item.selected_color);
+                      colorTextToShow = colorStr;
+                      const matchedColorObj = matchedProduct?.colors?.find(c => String(c.color_name) === colorStr);
+                      if (matchedColorObj?.color_code) {
+                        colorStyle = matchedColorObj.color_code;
+                      } else if (/^[0-9A-F]{6}$/i.test(colorStr)) {
+                        colorStyle = `#${colorStr}`;
+                      } else {
+                        colorStyle = colorStr; 
+                      }
+                    }
+                  }
+
+                  return (
+                    <div key={index} className="flex items-center gap-4 bg-white border border-stone-100 rounded-xl p-3 shadow-xs">
+                      {/* صورة المنتج */}
+                      <div className="h-16 w-16 rounded-lg bg-stone-50 border border-stone-100 overflow-hidden shrink-0">
+                        {finalImageUrl ? (
+                          <img src={finalImageUrl} alt={item.product_name} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center bg-stone-100 text-stone-400 text-[10px] text-center p-1">
+                            {isAr ? 'لا توجد صورة' : 'No image'}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* تفاصيل المنتج والكمية */}
+                      <div className="flex-1 min-w-0 space-y-1 text-right">
+                        <h5 className="font-bold text-stone-900 text-sm sm:text-base truncate">{item.product_name}</h5>
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-stone-500">
+                          <span className="font-mono bg-stone-100 px-1.5 py-0.5 rounded">
+                            {isAr ? `الكمية: ${item.quantity}` : `Qty: ${item.quantity}`}
+                          </span>
+                          {item.selected_color ? (
+                            <div className="flex items-center gap-1 bg-stone-50 border border-stone-200/60 px-1.5 py-0.5 rounded font-mono">
+                              <span className="inline-block h-3 w-3 rounded-full border border-stone-300" style={{ backgroundColor: colorStyle }} />
+                              <span className="text-[11px] text-stone-600">{colorTextToShow}</span>
+                            </div>
+                          ) : (
+                            <span className="text-stone-400 italic text-[11px]">{isAr ? 'بدون تحديد لون' : 'Standard'}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* حساب القطعة */}
+                      <div className="text-left font-mono shrink-0">
+                        <div className="text-sm font-bold text-stone-900">
+                          {item.price ? formatPrice(item.price * item.quantity, isAr) : '---'}
+                        </div>
+                        {item.quantity > 1 && item.price && (
+                          <div className="text-[10px] text-stone-400 mt-0.5">
+                            {formatPrice(item.price, isAr)} {isAr ? 'للقطعة' : '/pc'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* أزرار التحكم بالأسفل */}
+            <div className="flex gap-2 pt-3 border-t border-stone-100">
+              <button type="button" className="button-surface bg-stone-900 text-white w-full text-center" onClick={() => setViewOrder(null)}>
+                {isAr ? 'إغلاق النافذة' : 'Close'}
+              </button>
+              <button type="button" className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-600 active:bg-rose-100 transition whitespace-nowrap" onClick={() => deleteOrder(viewOrder.id)}>
+                {isAr ? 'مسح الأوردر' : 'Delete Order'}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       <ConfirmModal
         open={Boolean(deleteTarget)}
