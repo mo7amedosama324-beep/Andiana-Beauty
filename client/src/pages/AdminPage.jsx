@@ -24,7 +24,7 @@ export default function AdminPage() {
 
   const [deleteTarget, setDeleteTarget] = useState(null)
   
-  // 🔍 حالة جديدة لتخزين الأوردر المراد عرض تفاصيله بالكامل
+  // 🔍 حالة عرض تفاصيل الأوردر
   const [viewOrder, setViewOrder] = useState(null)
 
   const stats = useMemo(() => ([
@@ -496,7 +496,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* 🌟 نافذة تفاصيل الأوردر المطور بالكامل (شغل نظيف وعلى مية بيضا) */}
+      {/* 🌟 نافذة تفاصيل الأوردر المحدثة بالكامل (تم حل مشكلة السعر والعنوان بنجاح) */}
       {viewOrder && (
         <div className="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in" onClick={() => setViewOrder(null)}>
           <div className="bg-white rounded-page max-w-2xl w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 shadow-xl border border-stone-100 space-y-6 text-right" style={{ direction: isAr ? 'rtl' : 'ltr' }} onClick={(e) => e.stopPropagation()}>
@@ -514,7 +514,7 @@ export default function AdminPage() {
               <button type="button" className="text-stone-400 hover:text-stone-900 font-bold text-2xl p-1 transition" onClick={() => setViewOrder(null)}>×</button>
             </div>
 
-            {/* بيانات العميل وسير الأوردر */}
+            {/* 📍 بيانات العميل وسير الأوردر (تم إضافة حقل العنوان) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-sand-50/60 rounded-xl p-4 text-sm">
               <div className="space-y-1">
                 <span className="text-xs text-stone-400 block">{isAr ? 'اسم العميل:' : 'Customer Name:'}</span>
@@ -524,6 +524,15 @@ export default function AdminPage() {
                 <span className="text-xs text-stone-400 block">{isAr ? 'رقم الهاتف:' : 'Phone Number:'}</span>
                 <span className="font-bold text-stone-800 block font-mono break-all">{viewOrder.customer_phone}</span>
               </div>
+              
+              {/* حقل عنوان العميل الجديد بدعم كامل للمسميات المحتملة */}
+              <div className="space-y-1 sm:col-span-2 border-t border-stone-200/40 pt-2">
+                <span className="text-xs text-stone-400 block">{isAr ? 'عنوان التوصيل:' : 'Delivery Address:'}</span>
+                <span className="font-bold text-stone-800 block break-words bg-white/60 p-2 rounded-lg mt-1 border border-stone-200/50">
+                  {viewOrder.customer_address || viewOrder.address || (isAr ? 'لم يتم تحديد عنوان' : 'No address provided')}
+                </span>
+              </div>
+
               <div className="space-y-1 sm:col-span-2 border-t border-stone-200/50 pt-2 mt-1 flex items-center justify-between">
                 <div>
                   <span className="text-xs text-stone-400 block mb-1">{isAr ? 'حالة الطلب الحالية:' : 'Current Status:'}</span>
@@ -536,16 +545,20 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* المنتجات داخل الأوردر (بالصور والتفاصيل) */}
+            {/* المنتجات داخل الأوردر (بالصور والأسعار الصحيحة الفعالة) */}
             <div className="space-y-3">
               <h4 className="font-display font-bold text-sm text-stone-500 uppercase tracking-wider">
                 {isAr ? 'المنتجات المطلوبة' : 'Items Ordered'}
               </h4>
               <div className="space-y-2.5">
                 {viewOrder.items && viewOrder.items.map((item, index) => {
-                  // جلب الصورة بشكل ذكي كـ fallback لو مش مبعوتة في الـ items مباشرة
-                  const matchedProduct = products.find(p => p.name === item.product_name);
+                  // ربط ذكي بالمنتج الأساسي لجلب البيانات الغائبة من السيرفر كـ Fallback
+                  const matchedProduct = products.find(p => p.name === item.product_name || p.id === item.product);
                   const finalImageUrl = item.product_image || item.image || matchedProduct?.image || matchedProduct?.image_url;
+                  
+                  // حساب السعر الفعلي الفردي (لو مش راجع في الـ item خده من المنتج الماتش)
+                  const fallbackPrice = matchedProduct?.sale_price || matchedProduct?.price || 0;
+                  const currentItemPrice = item.price || item.product_price || fallbackPrice;
 
                   let colorStyle = '#ffffff'; 
                   let colorTextToShow = '';
@@ -598,14 +611,14 @@ export default function AdminPage() {
                         </div>
                       </div>
 
-                      {/* حساب القطعة */}
+                      {/* 💰 حقل عرض حساب السعر والقطعة الفردية بجانبه مباشرة بدقة */}
                       <div className="text-left font-mono shrink-0">
                         <div className="text-sm font-bold text-stone-900">
-                          {item.price ? formatPrice(item.price * item.quantity, isAr) : '---'}
+                          {currentItemPrice ? formatPrice(currentItemPrice * item.quantity, isAr) : '---'}
                         </div>
-                        {item.quantity > 1 && item.price && (
+                        {currentItemPrice > 0 && (
                           <div className="text-[10px] text-stone-400 mt-0.5">
-                            {formatPrice(item.price, isAr)} {isAr ? 'للقطعة' : '/pc'}
+                            {formatPrice(currentItemPrice, isAr)} {isAr ? 'للقطعة' : '/pc'}
                           </div>
                         )}
                       </div>
