@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useApp } from '../context/AppContext'
 
 const MAX_REQUESTS = 12
-const REQUEST_TIMEOUT_MS = 15000
+const REQUEST_TIMEOUT_MS = 20000
 const MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-3.8-flash'
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY
 const FALLBACK_MODELS = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-2.0-flash']
@@ -113,7 +113,11 @@ Catalog: ${productContext}`,
           }],
         },
         contents,
-        generationConfig: { temperature: 0.4, maxOutputTokens: 350 },
+        generationConfig: {
+          temperature: 0.4,
+          maxOutputTokens: 350,
+          thinkingConfig: { thinkingLevel: 'LOW' },
+        },
       }
       let response
       for (const model of [...new Set([MODEL, ...FALLBACK_MODELS])]) {
@@ -130,14 +134,27 @@ Catalog: ${productContext}`,
         ).finally(() => window.clearTimeout(timeoutId))
         if (response.ok || response.status !== 404) break
       }
-      if (!response?.ok) throw new Error('gemini-request')
+      if (!response?.ok) {
+        let apiMessage = ''
+        try {
+          const errorData = await response.json()
+          apiMessage = errorData.error?.message || ''
+        } catch {
+          apiMessage = ''
+        }
+        throw new Error(apiMessage || 'gemini-request')
+      }
       const data = await response.json()
       const answer = data.candidates?.[0]?.content?.parts?.map((part) => part.text).join(' ').trim()
       if (!answer) throw new Error('empty-answer')
       setMessages((current) => [...current, { role: 'model', text: answer }])
       setRequestCount((count) => count + 1)
     } catch (error) {
-      const message = error?.name === 'AbortError' ? copy.timeout : copy.error
+      const message = error?.name === 'AbortError'
+        ? copy.timeout
+        : error?.message && error.message !== 'gemini-request'
+          ? `${copy.error} (${error.message})`
+          : copy.error
       setMessages((current) => [...current, { role: 'model', text: message }])
     } finally {
       setLoading(false)
