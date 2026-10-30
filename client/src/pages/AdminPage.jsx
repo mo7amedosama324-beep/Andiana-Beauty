@@ -23,16 +23,35 @@ export default function AdminPage() {
   const [additionalImageUrls, setAdditionalImageUrls] = useState([]) 
 
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [dashboardQuery, setDashboardQuery] = useState('')
+  const [orderFilter, setOrderFilter] = useState('all')
   
   // 🔍 حالة عرض تفاصيل الأوردر
   const [viewOrder, setViewOrder] = useState(null)
 
   const stats = useMemo(() => ([
-    { label: t.admin.orders, value: orders.length },
-    { label: t.admin.products, value: products.length },
-    { label: t.admin.categories, value: categories.length },
-    { label: t.admin.users, value: users.length },
+    { label: t.admin.orders, value: orders.length, accent: 'rose', mark: '01' },
+    { label: t.admin.products, value: products.length, accent: 'gold', mark: '02' },
+    { label: t.admin.categories, value: categories.length, accent: 'sage', mark: '03' },
+    { label: t.admin.users, value: users.length, accent: 'ink', mark: '04' },
   ]), [categories.length, orders.length, products.length, t.admin.categories, t.admin.orders, t.admin.products, t.admin.users, users.length])
+
+  const filteredOrders = useMemo(() => {
+    const query = dashboardQuery.trim().toLowerCase()
+    return orders.filter((order) => {
+      const matchesQuery = !query || [order.id, order.customer_name, order.customer_phone]
+        .some((value) => String(value || '').toLowerCase().includes(query))
+      const matchesStatus = orderFilter === 'all' || String(order.status || '').toLowerCase() === orderFilter
+      return matchesQuery && matchesStatus
+    })
+  }, [dashboardQuery, orderFilter, orders])
+
+  const filteredProducts = useMemo(() => {
+    const query = dashboardQuery.trim().toLowerCase()
+    if (!query) return products
+    return products.filter((product) => [product.name, product.category_name]
+      .some((value) => String(value || '').toLowerCase().includes(query)))
+  }, [dashboardQuery, products])
 
   const refreshAdminData = useCallback(async () => {
     setLoading(true)
@@ -196,8 +215,13 @@ export default function AdminPage() {
 
   return (
     <PageShell isAr={isAr} setLang={setLang} t={t} authUser={authUser} onLogout={handleLogout} cartCount={cartItemCount} nudePalette={nudePalette} onTogglePalette={togglePalette}>
-      <header className="card-surface p-4 sm:p-6 w-full max-w-full overflow-hidden">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-stone-400">{t.admin.panel}</p>
+      <header className="admin-hero card-surface p-5 sm:p-8 w-full max-w-full overflow-hidden">
+        <div className="admin-hero__glow" aria-hidden="true" />
+        <div className="relative">
+          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.35em] text-brand-700">
+            <span className="admin-live-dot" aria-hidden="true" />
+            {isAr ? 'نظرة عامة مباشرة' : 'Live overview'}
+          </div>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h1 className="font-display text-2xl sm:text-4xl text-stone-900 break-words">{t.admin.panel}</h1>
@@ -207,13 +231,45 @@ export default function AdminPage() {
             {isAr ? 'تحديث' : 'Refresh'}
           </button>
         </div>
+        <div className="mt-6 grid gap-3 md:grid-cols-[1fr_auto]">
+          <label className="admin-search">
+            <span aria-hidden="true">⌕</span>
+            <input
+              value={dashboardQuery}
+              onChange={(event) => setDashboardQuery(event.target.value)}
+              placeholder={isAr ? 'ابحث بالاسم أو رقم الطلب أو الهاتف...' : 'Search by name, order number or phone...'}
+              aria-label={isAr ? 'بحث في لوحة التحكم' : 'Search dashboard'}
+            />
+          </label>
+          <div className="flex items-center gap-2 rounded-2xl border border-brand-100 bg-white/70 p-1.5">
+            {[
+              ['all', isAr ? 'الكل' : 'All'],
+              ['pending', isAr ? 'قيد الانتظار' : 'Pending'],
+              ['completed', isAr ? 'مكتمل' : 'Completed'],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setOrderFilter(value)}
+                className={`rounded-xl px-3 py-2 text-xs font-semibold transition ${orderFilter === value ? 'bg-stone-900 text-white shadow-sm' : 'text-stone-500 hover:bg-brand-50'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        </div>
       </header>
 
       <section className="grid gap-3 grid-cols-2 lg:grid-cols-4 w-full max-w-full">
         {stats.map((stat) => (
-          <div key={stat.label} className="card-surface p-4 sm:p-5 min-w-0">
-            <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.15em] sm:tracking-[0.3em] text-stone-400 truncate">{stat.label}</p>
+          <div key={stat.label} className={`admin-stat admin-stat--${stat.accent} card-surface p-4 sm:p-5 min-w-0`}>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.15em] sm:tracking-[0.3em] text-stone-400 truncate">{stat.label}</p>
+              <span className="admin-stat__mark">{stat.mark}</span>
+            </div>
             <p className="mt-1 font-display text-xl sm:text-3xl text-stone-900 truncate">{stat.value}</p>
+            <div className="admin-stat__line" aria-hidden="true" />
           </div>
         ))}
       </section>
@@ -242,7 +298,7 @@ export default function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <tr key={order.id} className="border-t border-brand-100 transition hover:bg-stone-50">
                   <td className="px-4 py-3 font-semibold text-stone-900">{order.id}</td>
                   <td className="px-4 py-3 text-stone-600">
@@ -267,13 +323,24 @@ export default function AdminPage() {
                   </td>
                 </tr>
               ))}
+              {filteredOrders.length === 0 && (
+                <tr>
+                  <td colSpan="7" className="px-4 py-12 text-center text-sm text-stone-400">
+                    {loading ? (isAr ? 'جاري تحميل الطلبات...' : 'Loading orders...') : (isAr ? 'لا توجد طلبات مطابقة للبحث.' : 'No orders match your search.')}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
 
         {/* 📱 شاشات الموبايل */}
         <div className="block md:hidden space-y-3">
-          {orders.map((order) => (
+          {filteredOrders.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-brand-200 bg-brand-50/30 px-4 py-10 text-center text-sm text-stone-400">
+              {loading ? (isAr ? 'جاري تحميل الطلبات...' : 'Loading orders...') : (isAr ? 'لا توجد طلبات مطابقة للبحث.' : 'No orders match your search.')}
+            </div>
+          ) : filteredOrders.map((order) => (
             <div key={order.id} className="rounded-xl border border-brand-100 bg-white/95 p-4 shadow-sm space-y-3 w-full overflow-hidden">
               <div className="flex items-center justify-between border-b border-stone-100/80 pb-2 gap-2">
                 <div className="min-w-0">
@@ -403,7 +470,7 @@ export default function AdminPage() {
             <table className="min-w-full border-collapse text-sm table-auto">
               <thead className="bg-sand-50 text-left text-xs uppercase tracking-[0.2em] text-stone-500"><tr><th className="px-4 py-3">Name</th><th className="px-4 py-3">Category</th><th className="px-4 py-3">Active</th><th className="px-4 py-3">Price</th><th className="px-4 py-3">Actions</th></tr></thead>
               <tbody>
-                {products.map((product) => (
+                {filteredProducts.map((product) => (
                   <tr key={product.id} className="border-t border-brand-100 transition hover:bg-stone-50">
                     <td className="px-4 py-3 font-semibold text-stone-900 whitespace-nowrap">{product.name}</td>
                     <td className="px-4 py-3 text-stone-600 whitespace-nowrap">{product.category_name || (isAr ? 'بدون قسم' : 'No category')}</td>
@@ -443,6 +510,13 @@ export default function AdminPage() {
                     </td>
                   </tr>
                 ))}
+                {filteredProducts.length === 0 && (
+                  <tr>
+                    <td colSpan="5" className="px-4 py-10 text-center text-sm text-stone-400">
+                      {isAr ? 'لا توجد منتجات مطابقة للبحث.' : 'No products match your search.'}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
