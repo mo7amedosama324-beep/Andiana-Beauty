@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useApp } from '../context/AppContext'
 
 const MAX_REQUESTS = 12
-const MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.5-flash'
+const MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-3.8-flash'
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY
+const FALLBACK_MODELS = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-2.0-flash']
 
 function getProductContext(products, isAr) {
   return products.slice(0, 80).map((product) => ({
@@ -22,6 +23,7 @@ export default function GeminiChat() {
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
   const [requestCount, setRequestCount] = useState(0)
+  const [selectedProduct, setSelectedProduct] = useState(null)
 
   const productContext = useMemo(() => JSON.stringify(getProductContext(products, isAr)), [isAr, products])
   const copy = isAr
@@ -36,6 +38,7 @@ export default function GeminiChat() {
         error: 'حصلت مشكلة مؤقتة. جربي مرة ثانية.',
         suggestions: ['إيه أفضل منتج للبشرة الجافة؟', 'رشحيلي منتج أقل من 500 جنيه', 'إيه الفرق بين المنتجات المتاحة؟'],
       }
+
     : {
         label: 'Andiana Assistant',
         subtitle: 'Ask about our products',
@@ -47,6 +50,25 @@ export default function GeminiChat() {
         error: 'Something went wrong. Please try again.',
         suggestions: ['What is best for dry skin?', 'Recommend something under EGP 500', 'Compare the available products'],
       }
+
+  useEffect(() => {
+    const handleProductSelection = (event) => {
+      const product = event.detail
+      if (!product) return
+      setSelectedProduct(product)
+      setOpen(true)
+      setMessages([{
+        role: 'model',
+        text: isAr
+          ? `أهلًا! اسأليني عن «${product.name}» — أقدر أوضح السعر، الوصف، الألوان، وهل يناسب احتياجك.`
+          : `Hi! Ask me anything about “${product.name}”. I can explain its price, description, colors, and whether it fits your needs.`,
+      }])
+      setInput(isAr ? `إيه رأيك في ${product.name}؟` : `What do you think about ${product.name}?`)
+    }
+
+    window.addEventListener('andiana-ai-product', handleProductSelection)
+    return () => window.removeEventListener('andiana-ai-product', handleProductSelection)
+  }, [isAr])
 
   const sendMessage = async (event, suggestedText = '') => {
     event?.preventDefault()
@@ -71,26 +93,38 @@ export default function GeminiChat() {
         role: message.role === 'user' ? 'user' : 'model',
         parts: [{ text: message.text }],
       }))
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(API_KEY)}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            systemInstruction: {
-              parts: [{
-                text: `You are Andiana Beauty's product assistant. Answer in ${isAr ? 'Arabic' : 'English'}.
+      const requestBody = {
+        systemInstruction: {
+          parts: [{
+            text: `You are Andiana Beauty's product assistant. Answer in ${isAr ? 'Arabic' : 'English'}.
 Only recommend products from the catalog below. Never invent stock, ingredients, medical claims, discounts, or delivery promises.
 Be concise, friendly, and mention when the catalog does not contain enough information. Prices are in EGP.
+The shopper is currently asking about this product: ${selectedProduct ? JSON.stringify({
+  name: selectedProduct.name,
+  category: selectedProduct.category_name || selectedProduct.category,
+  description: selectedProduct.description || '',
+  price: selectedProduct.sale_price || selectedProduct.price,
+  colors: selectedProduct.colors?.map((color) => color.color_name).filter(Boolean) || [],
+}) : 'No single product selected'}.
 Catalog: ${productContext}`,
-              }],
-            },
-            contents,
-            generationConfig: { temperature: 0.4, maxOutputTokens: 350 },
-          }),
+          }],
         },
-      )
-      if (!response.ok) throw new Error('gemini-request')
+        contents,
+        generationConfig: { temperature: 0.4, maxOutputTokens: 350 },
+      }
+      let response
+      for (const model of [...new Set([MODEL, ...FALLBACK_MODELS])]) {
+        response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(API_KEY)}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+          },
+        )
+        if (response.ok || response.status !== 404) break
+      }
+      if (!response?.ok) throw new Error('gemini-request')
       const data = await response.json()
       const answer = data.candidates?.[0]?.content?.parts?.map((part) => part.text).join(' ').trim()
       if (!answer) throw new Error('empty-answer')
@@ -110,7 +144,7 @@ Catalog: ${productContext}`,
           <header className="gemini-chat__header">
             <div>
               <p>{copy.label}</p>
-              <span>{copy.subtitle}</span>
+              <span>{selectedProduct ? (isAr ? `عن: ${selectedProduct.name}` : `About: ${selectedProduct.name}`) : copy.subtitle}</span>
             </div>
             <button type="button" onClick={() => setOpen(false)} aria-label={isAr ? 'إغلاق المساعد' : 'Close assistant'}>×</button>
           </header>

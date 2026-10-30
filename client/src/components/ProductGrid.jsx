@@ -57,6 +57,10 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
     onAddToCart?.(product.id, selectedColor);
   };
 
+  const handleAskAi = () => {
+    window.dispatchEvent(new CustomEvent('andiana-ai-product', { detail: product }));
+  };
+
   return (
     <article className="group card-surface relative flex flex-col overflow-hidden p-3 transition-all duration-300 hover:-translate-y-1 border border-black dark:border-zinc-600">
 
@@ -124,6 +128,15 @@ function ProductCard({ product, isAr, addLabel, onAddToCart, cartBusy }) {
             -{discountPercentage}%
           </div>
         )}
+        <button
+          type="button"
+          className="product-ai-button absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/70 bg-stone-950/85 text-sm text-white shadow-lg backdrop-blur-sm transition hover:scale-110 hover:bg-stone-800 active:scale-95"
+          onClick={handleAskAi}
+          aria-label={isAr ? `اسأل الذكاء الاصطناعي عن ${product.name}` : `Ask AI about ${product.name}`}
+          title={isAr ? 'اسأل عن المنتج' : 'Ask AI about this product'}
+        >
+          ✦
+        </button>
       </div>
 
       {/* Thumbnails */}

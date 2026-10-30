@@ -174,13 +174,18 @@
   right: 1.25rem;
   bottom: 1.25rem;
   z-index: 40;
-  display: grid;
-  justify-items: end;
-  gap: .75rem;
+  width: 0;
+  height: 0;
+  pointer-events: none;
   font-family: Inter, Tajawal, system-ui, sans-serif;
 }
 
 .gemini-chat__trigger {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 41;
+  pointer-events: auto;
   display: inline-flex;
   align-items: center;
   gap: .55rem;
@@ -217,6 +222,11 @@
 }
 
 .gemini-chat__panel {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 5.7rem;
+  z-index: 41;
+  pointer-events: auto;
   display: grid;
   width: min(23rem, calc(100vw - 2rem));
   height: min(34rem, calc(100vh - 7rem));
@@ -227,6 +237,16 @@
   box-shadow: 0 25px 70px -24px rgba(57,39,26,.55);
   backdrop-filter: blur(18px);
   animation: chatPop .3s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.gemini-chat--open::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(41, 35, 31, .08);
+  pointer-events: auto;
+  animation: chatBackdrop .25s ease both;
 }
 
 .gemini-chat__header {
@@ -408,10 +428,20 @@
   50% { opacity: 1; transform: translateY(-3px); }
 }
 
+@keyframes chatBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @media (max-width: 640px) {
   .gemini-chat {
     right: .75rem;
     bottom: .75rem;
+  }
+
+  .gemini-chat__panel {
+    right: .75rem;
+    bottom: 5rem;
   }
 
   .gemini-chat__trigger b {
@@ -419,6 +449,8 @@
   }
 
   .gemini-chat__trigger {
+    right: .75rem;
+    bottom: .75rem;
     padding: .65rem;
   }
 }
