@@ -49,7 +49,7 @@ SECRET_KEY = os.environ.get(
 
 DEBUG = _env_bool("DJANGO_DEBUG", True)
 
-ALLOWED_HOSTS = _env_list("DJANGO_ALLOWED_HOSTS", "*")
+ALLOWED_HOSTS = _env_list("*")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
