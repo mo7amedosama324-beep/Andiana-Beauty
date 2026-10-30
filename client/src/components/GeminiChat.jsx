@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useApp } from '../context/AppContext'
 
 const MAX_REQUESTS = 12
+const REQUEST_TIMEOUT_MS = 15000
 const MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-3.8-flash'
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY
 const FALLBACK_MODELS = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-2.0-flash']
@@ -36,6 +37,7 @@ export default function GeminiChat() {
         limit: 'وصلتي للحد التجريبي المتاح لهذه الجلسة.',
         missingKey: 'المساعد غير متاح حاليًا. أضيفي VITE_GEMINI_API_KEY في ملف .env.local ثم أعيدي تشغيل الموقع.',
         error: 'حصلت مشكلة مؤقتة. جربي مرة ثانية.',
+        timeout: 'الرد اتأخر. تأكدي من اتصال الإنترنت ومفتاح Gemini ثم جربي مرة ثانية.',
         suggestions: ['إيه أفضل منتج للبشرة الجافة؟', 'رشحيلي منتج أقل من 500 جنيه', 'إيه الفرق بين المنتجات المتاحة؟'],
       }
 
@@ -48,6 +50,7 @@ export default function GeminiChat() {
         limit: 'You reached the demo limit for this session.',
         missingKey: 'Chat is not configured yet. Add VITE_GEMINI_API_KEY to .env.local and restart the app.',
         error: 'Something went wrong. Please try again.',
+        timeout: 'The response timed out. Check your internet connection and Gemini key, then try again.',
         suggestions: ['What is best for dry skin?', 'Recommend something under EGP 500', 'Compare the available products'],
       }
 
@@ -114,14 +117,17 @@ Catalog: ${productContext}`,
       }
       let response
       for (const model of [...new Set([MODEL, ...FALLBACK_MODELS])]) {
+        const controller = new AbortController()
+        const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
         response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(API_KEY)}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody),
+            signal: controller.signal,
           },
-        )
+        ).finally(() => window.clearTimeout(timeoutId))
         if (response.ok || response.status !== 404) break
       }
       if (!response?.ok) throw new Error('gemini-request')
@@ -130,8 +136,9 @@ Catalog: ${productContext}`,
       if (!answer) throw new Error('empty-answer')
       setMessages((current) => [...current, { role: 'model', text: answer }])
       setRequestCount((count) => count + 1)
-    } catch {
-      setMessages((current) => [...current, { role: 'model', text: copy.error }])
+    } catch (error) {
+      const message = error?.name === 'AbortError' ? copy.timeout : copy.error
+      setMessages((current) => [...current, { role: 'model', text: message }])
     } finally {
       setLoading(false)
     }
