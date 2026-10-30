@@ -19,6 +19,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
+from .gemini import gemini_chat
 
 
 def health(_request):
@@ -27,6 +28,7 @@ def health(_request):
 
 urlpatterns = [
     path("api/health/", health, name="api-health"),
+    path("api/ai/chat/", gemini_chat, name="ai-chat"),
     path("admin/", admin.site.urls),
     path('api/', include('accounts.urls')),
     path('api/', include('products.urls')),

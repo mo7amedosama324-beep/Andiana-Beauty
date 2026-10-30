@@ -3,9 +3,7 @@ import { useApp } from '../context/AppContext'
 
 const MAX_REQUESTS = 12
 const REQUEST_TIMEOUT_MS = 20000
-const MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-3.8-flash'
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY
-const FALLBACK_MODELS = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-2.0-flash']
+const API_BASE = import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
 
 function getProductContext(products, isAr) {
   return products.slice(0, 80).map((product) => ({
@@ -35,7 +33,7 @@ export default function GeminiChat() {
         welcome: 'أهلًا! أقدر أساعدك تختاري المنتج الأنسب من منتجات أنديانا. اسأليني عن السعر، الاستخدام أو الفرق بين منتجين.',
         send: 'إرسال',
         limit: 'وصلتي للحد التجريبي المتاح لهذه الجلسة.',
-        missingKey: 'المساعد غير متاح حاليًا. أضيفي VITE_GEMINI_API_KEY في ملف .env.local ثم أعيدي تشغيل الموقع.',
+        missingKey: 'المساعد غير متاح حاليًا. تأكدي من تشغيل خدمة المساعد.',
         error: 'حصلت مشكلة مؤقتة. جربي مرة ثانية.',
         timeout: 'الرد اتأخر. تأكدي من اتصال الإنترنت ومفتاح Gemini ثم جربي مرة ثانية.',
         suggestions: ['إيه أفضل منتج للبشرة الجافة؟', 'رشحيلي منتج أقل من 500 جنيه', 'إيه الفرق بين المنتجات المتاحة؟'],
@@ -48,7 +46,7 @@ export default function GeminiChat() {
         welcome: 'Hi! I can help you choose from Andiana products. Ask about price, usage, or the difference between two products.',
         send: 'Send',
         limit: 'You reached the demo limit for this session.',
-        missingKey: 'Chat is not configured yet. Add VITE_GEMINI_API_KEY to .env.local and restart the app.',
+        missingKey: 'Chat is not available right now. Please check the assistant service.',
         error: 'Something went wrong. Please try again.',
         timeout: 'The response timed out. Check your internet connection and Gemini key, then try again.',
         suggestions: ['What is best for dry skin?', 'Recommend something under EGP 500', 'Compare the available products'],
@@ -77,11 +75,6 @@ export default function GeminiChat() {
     event?.preventDefault()
     const text = (suggestedText || input).trim()
     if (!text || loading) return
-    if (!API_KEY) {
-      setMessages((current) => [...current, { role: 'model', text: copy.missingKey }])
-      setInput('')
-      return
-    }
     if (requestCount >= MAX_REQUESTS) {
       setMessages((current) => [...current, { role: 'model', text: copy.limit }])
       return
@@ -92,60 +85,30 @@ export default function GeminiChat() {
     setInput('')
     setLoading(true)
     try {
-      const contents = nextMessages.slice(-8).map((message) => ({
-        role: message.role === 'user' ? 'user' : 'model',
-        parts: [{ text: message.text }],
-      }))
-      const requestBody = {
-        systemInstruction: {
-          parts: [{
-            text: `You are Andiana Beauty's product assistant. Answer in ${isAr ? 'Arabic' : 'English'}.
-Only recommend products from the catalog below. Never invent stock, ingredients, medical claims, discounts, or delivery promises.
-Be concise, friendly, and mention when the catalog does not contain enough information. Prices are in EGP.
-The shopper is currently asking about this product: ${selectedProduct ? JSON.stringify({
-  name: selectedProduct.name,
-  category: selectedProduct.category_name || selectedProduct.category,
-  description: selectedProduct.description || '',
-  price: selectedProduct.sale_price || selectedProduct.price,
-  colors: selectedProduct.colors?.map((color) => color.color_name).filter(Boolean) || [],
-}) : 'No single product selected'}.
-Catalog: ${productContext}`,
-          }],
-        },
-        contents,
-        generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: 350,
-          thinkingConfig: { thinkingLevel: 'LOW' },
-        },
-      }
-      let response
-      for (const model of [...new Set([MODEL, ...FALLBACK_MODELS])]) {
-        const controller = new AbortController()
-        const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
-        response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(API_KEY)}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody),
-            signal: controller.signal,
-          },
-        ).finally(() => window.clearTimeout(timeoutId))
-        if (response.ok || response.status !== 404) break
-      }
-      if (!response?.ok) {
-        let apiMessage = ''
-        try {
-          const errorData = await response.json()
-          apiMessage = errorData.error?.message || ''
-        } catch {
-          apiMessage = ''
-        }
-        throw new Error(apiMessage || 'gemini-request')
-      }
-      const data = await response.json()
-      const answer = data.candidates?.[0]?.content?.parts?.map((part) => part.text).join(' ').trim()
+      const controller = new AbortController()
+      const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+      const response = await fetch(`${API_BASE}/ai/chat/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: nextMessages,
+          catalog: [
+            ...(selectedProduct ? [{
+              name: selectedProduct.name,
+              category: selectedProduct.category_name || selectedProduct.category,
+              description: selectedProduct.description || '',
+              price: selectedProduct.sale_price || selectedProduct.price,
+              colors: selectedProduct.colors?.map((color) => color.color_name).filter(Boolean) || [],
+            }] : []),
+            ...JSON.parse(productContext),
+          ],
+          language: isAr ? 'ar' : 'en',
+        }),
+        signal: controller.signal,
+      }).finally(() => window.clearTimeout(timeoutId))
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || 'gemini-request')
+      const answer = data.answer?.trim()
       if (!answer) throw new Error('empty-answer')
       setMessages((current) => [...current, { role: 'model', text: answer }])
       setRequestCount((count) => count + 1)
